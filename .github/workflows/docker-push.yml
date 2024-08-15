@@ -14,7 +14,7 @@ jobs:
       SNOWFLAKE_AUTHENTICATOR: SNOWFLAKE_JWT
       SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-      SNOWFLAKE_PRIVATE_KEY_PATH: ./key.p8
+      SNOWFLAKE_PRIVATE_KEY_PATH: /home/runner/work/key.p8
 
     steps:
       - name: Mask repo-related values in Github logs
