@@ -24,12 +24,6 @@ jobs:
              echo "::add-mask::$i"
           done
 
-      - name: Set up key
-        run: |
-          cat <<EOF > ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
-          ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          EOF
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -50,6 +44,12 @@ jobs:
 
       # Needs https://github.com/Snowflake-Labs/snowflake-cli-action/pull/22
       # - uses: Snowflake-Labs/snowflake-cli-action@v1.1
+      - name: Set up key
+        run: |
+          cat <<EOF > ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
+          ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+          EOF
+
       - uses: sfc-gh-vtimofeenko/snowflake-cli-action@fix_21
         with:
           cli-version: "latest"
@@ -59,6 +59,9 @@ jobs:
         run: |
           snow spcs image-registry login
 
+      - name: Remove key
+        run: |
+          rm -f ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
       # Build force amd64
       - name: Build and push
         uses: docker/build-push-action@v6
