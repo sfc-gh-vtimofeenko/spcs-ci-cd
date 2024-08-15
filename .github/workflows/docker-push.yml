@@ -1,0 +1,70 @@
+---
+name: Build container image using docker and push it to Snowflake
+
+# REGISTRY_URL can be retrieved by DESC IMAGE REPOSITORY <PATH>
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch: # Only run manually
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    env:
+      SNOWFLAKE_AUTHENTICATOR: SNOWFLAKE_JWT
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_PRIVATE_KEY_PATH: ./key.p8
+
+    steps:
+      - name: Mask repo-related values in Github logs
+        run: |
+          IFS='/' read -ra URL_PARTS <<< "${{ secrets.REGISTRY_URL }}"
+          for i in "${URL_PARTS[@]}"; do
+             echo "::add-mask::$i"
+          done
+
+      - name: Set up key
+        run: |
+          cat <<EOF > ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
+          ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+          EOF
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Example password-based login. Not recommended.
+      # If using this approach -- snowcli is not required
+      # - name: Login to Snowflake image registry
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ${{ secrets.REGISTRY_URL }}
+      #     username: ${{ secrets.SNOWFLAKE_USER }}
+      #     password: ${{ secrets.SNOWFLAKE_PASSWORD }}
+
+      # Setup snowcli
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Needs https://github.com/Snowflake-Labs/snowflake-cli-action/pull/22
+      # - uses: Snowflake-Labs/snowflake-cli-action@v1.1
+      - uses: sfc-gh-vtimofeenko/snowflake-cli-action@fix_21
+        with:
+          cli-version: "latest"
+          default-config-file-path: "config.toml"
+
+      - name: Log into the repository
+        run: |
+          snow spcs image-registry login
+
+      # Build force amd64
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64
+          push: true
+          # Tag the container with the revision
+          tags: ${{ secrets.REGISTRY_URL }}/spcs-ci-cd:${{ github.sha }}
+
