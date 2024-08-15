@@ -1,8 +1,6 @@
 ---
 name: Build container image using docker and push it to Snowflake
 
-# REGISTRY_URL can be retrieved by DESC IMAGE REPOSITORY <PATH>
-
 # yamllint disable-line rule:truthy
 on:
   workflow_dispatch: # Only run manually
@@ -18,6 +16,7 @@ jobs:
 
     steps:
       - name: Mask repo-related values in Github logs
+        # REGISTRY_URL can be retrieved by DESC IMAGE REPOSITORY <PATH>
         run: |
           IFS='/' read -ra URL_PARTS <<< "${{ secrets.REGISTRY_URL }}"
           for i in "${URL_PARTS[@]}"; do
@@ -62,12 +61,13 @@ jobs:
       - name: Remove key
         run: |
           rm -f ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
-      # Build force amd64
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
+          # Build force amd64
           platforms: linux/amd64
           push: true
-          # Tag the container with the revision
+          # Optional: tag the container with the revision
           tags: ${{ secrets.REGISTRY_URL }}/spcs-ci-cd:${{ github.sha }}
 
