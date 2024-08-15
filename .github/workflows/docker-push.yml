@@ -44,16 +44,16 @@ jobs:
 
       # Needs https://github.com/Snowflake-Labs/snowflake-cli-action/pull/22
       # - uses: Snowflake-Labs/snowflake-cli-action@v1.1
+      - uses: sfc-gh-vtimofeenko/snowflake-cli-action@fix_21
+        with:
+          cli-version: "latest"
+          default-config-file-path: "config.toml"
+
       - name: Set up key
         run: |
           cat <<EOF > ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
           ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
           EOF
-
-      - uses: sfc-gh-vtimofeenko/snowflake-cli-action@fix_21
-        with:
-          cli-version: "latest"
-          default-config-file-path: "config.toml"
 
       - name: Log into the repository
         run: |
