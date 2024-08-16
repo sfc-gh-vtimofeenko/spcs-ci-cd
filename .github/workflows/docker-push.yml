@@ -13,6 +13,7 @@ jobs:
       SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
       SNOWFLAKE_PRIVATE_KEY_PATH: /home/runner/work/key.p8
+      IMAGE_TAG: spcs-ci-cd
 
     steps:
       - name: Mask repo-related values in Github logs
@@ -69,5 +70,5 @@ jobs:
           platforms: linux/amd64
           push: true
           # Optional: tag the container with the revision
-          tags: ${{ secrets.REGISTRY_URL }}/spcs-ci-cd:${{ github.sha }}
+          tags: ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_TAG }}-docker:${{ github.sha }}
 
