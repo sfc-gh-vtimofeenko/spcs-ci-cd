@@ -1,0 +1,152 @@
+---
+name: Build container image using buildah and push it to Snowflake using podman
+
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch: # Only run manually
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    env:
+      SNOWFLAKE_AUTHENTICATOR: SNOWFLAKE_JWT
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_PRIVATE_KEY_PATH: /home/runner/work/key.p8
+      IMAGE_TAG: spcs-ci-cd
+
+    steps:
+      - name: Mask repo-related values in Github logs
+        # REGISTRY_URL can be retrieved by DESC IMAGE REPOSITORY <PATH>
+        run: |
+          IFS='/' read -ra URL_PARTS <<< "${{ secrets.REGISTRY_URL }}"
+          for i in "${URL_PARTS[@]}"; do
+             echo "::add-mask::$i"
+          done
+
+      # TODO: Command -v buildah -> trigger these actions
+
+      # If buildah is not available in CI, install it
+      # Using nix to take better advantage of caching than apt-get update & friends
+      - uses: DeterminateSystems/nix-installer-action@main
+      # NOTE: nix cache action collects telemetry
+      # See https://github.com/DeterminateSystems/magic-nix-cache
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      # The exact flakeref does not matter that much. It is pinned just for caching.
+      - name: Install necessary tools if not available
+        run: |
+          for cmd in buildah podman jq; do
+            command -v "$cmd" || nix profile install "github:NixOS/nixpkgs/nixos-24.05#$cmd"
+          done
+
+      - name: Set up registries.conf
+        run: |
+          CONTAINERS_DIR="/etc/containers"
+          mkdir -p "$CONTAINERS_DIR"
+
+          cat <<EOF > "$CONTAINERS_DIR/registries.conf"
+          [registries]
+          [registries.block]
+          registries = []
+
+          [registries.insecure]
+          registries = []
+
+          [registries.search]
+          registries = ["docker.io", "quay.io"]
+          EOF
+
+      - name: Set up policy.json
+        run: |
+          CONTAINERS_DIR="/etc/containers"
+          mkdir -p "$CONTAINERS_DIR"
+
+          # Sample policy from
+          # https://github.com/containers/buildah/issues/4039#issuecomment-1148220952
+          cat <<EOF > "$CONTAINERS_DIR/policy.json"
+          {
+              "default": [
+                  {
+                      "type": "insecureAcceptAnything"
+                  }
+              ],
+              "transports":
+                  {
+                      "docker-daemon":
+                          {
+                              "": [{"type":"insecureAcceptAnything"}]
+                          }
+                  }
+          }
+          EOF
+
+      # This step is needed for rootless envs where fuse is not available
+      # storage.conf will be used by both buildah and podman
+      - name: Set up storage.conf
+        run: |
+          CONTAINERS_DIR="/etc/containers"
+          mkdir -p "$CONTAINERS_DIR"
+
+          cat <<EOF > "$CONTAINERS_DIR/storage.conf"
+          [storage]
+          driver = "vfs"
+          graphroot = "/var/lib/containers/storage"
+          runroot = "/run/containers/storage"
+          EOF
+
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        id: build-image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: ${{ env.IMAGE_TAG }}-buildah
+          tags: ${{ github.sha }}
+          archs: amd64
+          containerfiles: ./Dockerfile
+
+      # Pushing
+
+      # Needs https://github.com/Snowflake-Labs/snowflake-cli-action/pull/22
+      # - uses: Snowflake-Labs/snowflake-cli-action@v1.1
+      - uses: sfc-gh-vtimofeenko/snowflake-cli-action@fix_21
+        with:
+          cli-version: "latest"
+          default-config-file-path: "config.toml"
+
+      - name: Set up key
+        run: |
+          cat <<EOF > ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
+          ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+          EOF
+
+      - name: Generate the token
+        # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#example-of-a-multiline-string
+        run: |
+          SNOW_SPCS_LOGIN=$(snow spcs image-registry token --format=JSON)
+
+          # WARN: Make sure to mask the token in the logs
+          echo "::add-mask::$(echo $SNOW_SPCS_LOGIN | jq ".token")"
+
+          {
+            echo 'SPCS_TOKEN<<EOF'
+            echo "$SNOW_SPCS_LOGIN"
+            echo EOF
+          } >> "$GITHUB_ENV"
+
+      - name: Remove key
+        run: |
+          rm -f ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
+
+      - name: Push image
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build-image.outputs.image }}
+          tags: ${{ steps.build-image.outputs.tags }}
+          registry: ${{ secrets.REGISTRY_URL }}
+          username: 0sessiontoken
+          password: ${{ env.SPCS_TOKEN }}
+          # If using password:
+          # password: ${{ secrets.REGISTRY_PASSWORD }}
