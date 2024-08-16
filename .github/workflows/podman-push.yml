@@ -25,23 +25,34 @@ jobs:
              echo "::add-mask::$i"
           done
 
-      # TODO: Command -v buildah -> trigger these actions
+      - name: Check if necessary tools are installed
+        run: |
+          for cmd in buildah podman jq; do
+            if [ $(command -v ${cmd}) ]; then
+              echo "__NEED_INSTALL=1" > $GITHUB_ENV
+            fi
+          done
 
       # If buildah is not available in CI, install it
       # Using nix to take better advantage of caching than apt-get update & friends
       - uses: DeterminateSystems/nix-installer-action@main
+        if: ${{ env.__NEED_INSTALL }}
+
       # NOTE: nix cache action collects telemetry
       # See https://github.com/DeterminateSystems/magic-nix-cache
       - uses: DeterminateSystems/magic-nix-cache-action@main
+        if: ${{ env.__NEED_INSTALL }}
 
       # The exact flakeref does not matter that much. It is pinned just for caching.
-      - name: Install necessary tools if not available
+      - name: Install necessary tools
+        if: ${{ env.__NEED_INSTALL }}
         run: |
           for cmd in buildah podman jq; do
             command -v "$cmd" || nix profile install "github:NixOS/nixpkgs/nixos-24.05#$cmd"
           done
 
       - name: Set up registries.conf
+        if: ${{ env.__NEED_INSTALL }}
         run: |
           CONTAINERS_DIR="/etc/containers"
           mkdir -p "$CONTAINERS_DIR"
@@ -59,6 +70,7 @@ jobs:
           EOF
 
       - name: Set up policy.json
+        if: ${{ env.__NEED_INSTALL }}
         run: |
           CONTAINERS_DIR="/etc/containers"
           mkdir -p "$CONTAINERS_DIR"
@@ -85,6 +97,7 @@ jobs:
       # This step is needed for rootless envs where fuse is not available
       # storage.conf will be used by both buildah and podman
       - name: Set up storage.conf
+        if: ${{ env.__NEED_INSTALL }}
         run: |
           CONTAINERS_DIR="/etc/containers"
           mkdir -p "$CONTAINERS_DIR"
