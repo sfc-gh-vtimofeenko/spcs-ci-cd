@@ -14,7 +14,6 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    container: nixos/nix:latest
     env:
       SNOWFLAKE_AUTHENTICATOR: SNOWFLAKE_JWT
       SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
@@ -33,17 +32,21 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Install necessary tools
-        run: |
-          NIX_CMD="nix --extra-experimental-features nix-command --extra-experimental-features flakes profile install --impure"
-          for pkg in kaniko skopeo pipx; do
-            $NIX_CMD "github:NixOS/nixpkgs/nixos-24.05#$pkg"
-          done
+      # Using nix to take better advantage of caching than apt-get update & friends
+      - uses: DeterminateSystems/nix-installer-action@main
+
+      # NOTE: nix cache action collects telemetry
+      # See https://github.com/DeterminateSystems/magic-nix-cache
+      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - uses: Snowflake-Labs/snowflake-cli-action@main
         with:
           cli-version: "latest"
           default-config-file-path: "config.toml"
+
+      - name: Build image (produce docker archive file)
+        run: |
+          nix build -o out .#default
 
       - name: Set up key
         run: |
@@ -51,23 +54,14 @@ jobs:
           ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
           EOF
 
-
-      - name: Build image (produce docker archive)
-        run: |
-          rm -rf /usr/share # Removing conflict. Don't do this to a normal system.
-          # WARN: kaniko _will_ mangle your system. This should be run only inside a disposable container
-          executor --no-push \
-            --context=$(pwd) \
-            --destination=outimage `# effectively produces docker archive`\
-            --tarPath=out.tar
-
       - name: Push image using skopeo
         run: |
-          snow spcs image-registry token --format=JSON | skopeo login "${{ secrets.REGISTRY_URL }}" --username 0sessiontoken --password-stdin
+          SKOPEO_CMD="nix run .#skopeo --"
+          snow spcs image-registry token --format=JSON | $SKOPEO_CMD login "${{ secrets.REGISTRY_URL }}" --username 0sessiontoken --password-stdin
 
           TAG="${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_TAG }}-archive-skopeo:${{ github.sha }}"
-          skopeo copy \
+          $SKOPEO_CMD copy \
               --additional-tag "$TAG" \
               --insecure-policy `#otherwise fails loading policy.json `\
-              docker-archive:out.tar \
+              docker-archive:out \
               docker://"$TAG"
