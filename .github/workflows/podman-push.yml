@@ -123,7 +123,7 @@ jobs:
 
       # Pushing
 
-      - uses: Snowflake-Labs/snowflake-cli-action@main
+      - uses: Snowflake-Labs/snowflake-cli-action@v1.2
         with:
           cli-version: "latest"
           default-config-file-path: "config.toml"
