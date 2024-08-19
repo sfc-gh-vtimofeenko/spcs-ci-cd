@@ -5,7 +5,7 @@
 # Looks like kaniko does not work that well with cross-compiling for different arches:
 # https://github.com/GoogleContainerTools/kaniko?tab=readme-ov-file#creating-multi-arch-container-manifests-using-kaniko-and-manifest-tool
 ---
-name: kaniko-scratch
+name: Build docker archive and push it using skopeo
 
 # yamllint disable-line rule:truthy
 on:
