@@ -42,9 +42,7 @@ jobs:
         with:
           persist-credentials: false
 
-      # Needs https://github.com/Snowflake-Labs/snowflake-cli-action/pull/22
-      # - uses: Snowflake-Labs/snowflake-cli-action@v1.1
-      - uses: sfc-gh-vtimofeenko/snowflake-cli-action@fix_21
+      - uses: Snowflake-Labs/snowflake-cli-action@main
         with:
           cli-version: "latest"
           default-config-file-path: "config.toml"
