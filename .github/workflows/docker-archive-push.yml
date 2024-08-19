@@ -35,16 +35,10 @@ jobs:
 
       - name: Install necessary tools
         run: |
-          set -x
-          # Enable flakes and nix cmd
-          # Disable filtering syscalls as it seems to mess with cross compilation:
-          # https://github.com/NixOS/nix/issues/5258
-          NIX_CMD="nix --extra-experimental-features nix-command --extra-experimental-features flakes  --option filter-syscalls false profile install --impure"
+          NIX_CMD="nix --extra-experimental-features nix-command --extra-experimental-features flakes profile install --impure"
           for pkg in kaniko skopeo pipx; do
             $NIX_CMD "github:NixOS/nixpkgs/nixos-24.05#$pkg"
           done
-          # This may be a bit slow
-          # $NIX_CMD "github:sfc-gh-vtimofeenko/snowcli-nix-flake"
 
       - uses: Snowflake-Labs/snowflake-cli-action@main
         with:
@@ -69,7 +63,6 @@ jobs:
 
       - name: Push image using skopeo
         run: |
-          # export REGISTRY_AUTH_FILE="/tmp/auth.json"
           snow spcs image-registry token --format=JSON | skopeo login "${{ secrets.REGISTRY_URL }}" --username 0sessiontoken --password-stdin
 
           TAG="${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_TAG }}-archive-skopeo:${{ github.sha }}"
