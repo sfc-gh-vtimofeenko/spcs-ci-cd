@@ -1,0 +1,80 @@
+# This workflow is an experiment in running the kaniko binary from a nix environment
+#
+# It does not push the image out to Snowflake image registry
+#
+# Looks like kaniko does not work that well with cross-compiling for different arches:
+# https://github.com/GoogleContainerTools/kaniko?tab=readme-ov-file#creating-multi-arch-container-manifests-using-kaniko-and-manifest-tool
+---
+name: kaniko-scratch
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch: # Only run manually
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    container: nixos/nix:latest
+    env:
+      SNOWFLAKE_AUTHENTICATOR: SNOWFLAKE_JWT
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_PRIVATE_KEY_PATH: /home/runner/work/key.p8
+      IMAGE_TAG: spcs-ci-cd
+
+    steps:
+      - name: Mask repo-related values in Github logs
+        # REGISTRY_URL can be retrieved by DESC IMAGE REPOSITORY <PATH>
+        run: |
+          IFS='/' read -ra URL_PARTS <<< "${{ secrets.REGISTRY_URL }}"
+          for i in "${URL_PARTS[@]}"; do
+             echo "::add-mask::$i"
+          done
+
+      - uses: actions/checkout@v4
+
+      - name: Install necessary tools
+        run: |
+          set -x
+          # Enable flakes and nix cmd
+          # Disable filtering syscalls as it seems to mess with cross compilation:
+          # https://github.com/NixOS/nix/issues/5258
+          NIX_CMD="nix --extra-experimental-features nix-command --extra-experimental-features flakes  --option filter-syscalls false profile install --impure"
+          for pkg in kaniko skopeo pipx; do
+            $NIX_CMD "github:NixOS/nixpkgs/nixos-24.05#$pkg"
+          done
+          # This may be a bit slow
+          # $NIX_CMD "github:sfc-gh-vtimofeenko/snowcli-nix-flake"
+
+      - uses: Snowflake-Labs/snowflake-cli-action@main
+        with:
+          cli-version: "latest"
+          default-config-file-path: "config.toml"
+
+      - name: Set up key
+        run: |
+          cat <<EOF > ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
+          ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+          EOF
+
+
+      - name: Build image (produce docker archive)
+        run: |
+          rm -rf /usr/share # Removing conflict. Don't do this to a normal system.
+          # WARN: kaniko _will_ mangle your system. This should be run only inside a disposable container
+          executor --no-push \
+            --context=$(pwd) \
+            --destination=outimage `# effectively produces docker archive`\
+            --tarPath=out.tar
+
+      - name: Push image using skopeo
+        run: |
+          # export REGISTRY_AUTH_FILE="/tmp/auth.json"
+          snow spcs image-registry token --format=JSON | skopeo login "${{ secrets.REGISTRY_URL }}" --username 0sessiontoken --password-stdin
+
+          TAG="${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_TAG }}-archive-skopeo:${{ github.sha }}"
+          skopeo copy \
+              --additional-tag "$TAG" \
+              --insecure-policy `#otherwise fails loading policy.json `\
+              docker-archive:out.tar \
+              docker://"$TAG"
