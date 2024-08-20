@@ -1,6 +1,6 @@
-This is a repository to complement a blog post.
+This is a repository to complement a [blog post][post] on building and pushing container
+images into Snowpark Container Services.
 
-<!-- TODO: link -->
+It contains a sample container Dockerfile and a set of GitHub actions.
 
-It contains a sample container Dockerfile and instructions to build and push it
-into Snowpark Container Services.
+[post]: https://medium.com/@vladimir.timofeenko/snowpark-container-services-ci-cd-building-and-pushing-images-2109f54eaa99
