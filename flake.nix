@@ -127,11 +127,21 @@
                   '';
                   category = "demo";
                 }
+                {
+                  help = "Run a hurl-based test";
+                  name = "test-hurl";
+                  command = ''
+                    export HURL_port="''${DEMO_DOCKER_PORT}"
+                    export HURL_user="''${USER}"
+                    ${pkgs.lib.getExe pkgs.hurl} --test "''${PRJ_ROOT}/hurl-tests/"
+                  '';
+                }
               ];
             packages = [
               pkgs.skopeo
               pkgs.buildah
               pkgs.act
+              pkgs.hurl
               pkgs.curl
             ];
           };
