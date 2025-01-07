@@ -4,12 +4,16 @@
   inputs = {
     flake-parts.url = "github:hercules-ci/flake-parts";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    devshell.url = "github:numtide/devshell";
+    devshell.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
     inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [ ];
+      imports = [
+        inputs.devshell.flakeModule
+      ];
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -73,11 +77,62 @@
 
           };
 
-          devShells.default = pkgs.mkShell {
+          devshells.default = {
+            env = [
+              {
+
+                name = "DEMO_DOCKER_PORT";
+                value = 8000;
+              }
+            ];
+
+            commands =
+              let
+                curl = pkgs.lib.getExe pkgs.curl;
+              in
+              [
+                {
+                  help = "run local docker";
+                  name = "docker-run-local";
+                  command = "docker run --rm -p \${DEMO_DOCKER_PORT}:80 $(docker build -q \${PRJ_ROOT})"; # NOTE: not providing docker in the devshell
+                }
+                # Requests to /
+                # Just to show it works
+                {
+                  help = "Send sample request to /";
+                  name = "demo-request-root";
+                  command = "${curl} http://localhost:\${DEMO_DOCKER_PORT}";
+                  category = "demo";
+                }
+                # A sample greeting
+                {
+                  help = "Send sample request to / as if visiting as a Snowflake user.";
+                  name = "demo-request-root-as-a-user";
+                  command = ''
+                    ${curl} \
+                      --header "sf-Context-Current-User: ''${USER}"\
+                      http://localhost:''${DEMO_DOCKER_PORT}'';
+                  category = "demo";
+                }
+                # Json endpoint
+                {
+                  help = "Send sample request to /echo";
+                  name = "demo-request-post-echo";
+                  command = ''
+                    ${curl} \
+                      --request POST \
+                      --header "Content-Type: application/json" \
+                      --data '{"data": [[0, "Hello"]]}' \
+                      http://localhost:''${DEMO_DOCKER_PORT}/echo
+                  '';
+                  category = "demo";
+                }
+              ];
             packages = [
               pkgs.skopeo
               pkgs.buildah
               pkgs.act
+              pkgs.curl
             ];
           };
         };
