@@ -75,34 +75,14 @@
               }
             ];
 
-            commands = [
-              {
-                help = "Run a hurl-based test";
-                name = "test-hurl";
-                command =
-                  # bash
-                  ''
-                    export HURL_port="''${DEMO_DOCKER_PORT}"
-                    export HURL_user="''${USER}"
-                    ${pkgs.lib.getExe pkgs.hurl} --test "''${PRJ_ROOT}/hurl-tests/unit-tests"
-                  '';
-                category = "test";
-              }
-              {
-                help = "Run hurl test against service in SPCS";
-                name = "test-spcs-hurl";
-                command =
-                  # bash
-                  ''
-                    export HURL_auth_token=$($PRJ_ROOT/utils/spcs-jwt-to-auth-token)
-                    export HURL_url=''${ENDPOINT_URL}
-                    export HURL_expected_user=''${SNOWFLAKE_USER}
+            commands =
+              [
+                ./utils/devshell-cmds/demo.nix
+                ./utils/devshell-cmds/test.nix
+              ]
+              |> map (file: import file { inherit pkgs; })
+              |> pkgs.lib.flatten;
 
-                    ${pkgs.lib.getExe pkgs.hurl} --test "''${PRJ_ROOT}"/hurl-tests/integration-tests
-                  '';
-                category = "test";
-              }
-            ] ++ (import ./utils/devshell-cmds/demo.nix { inherit pkgs; });
             packages = [
               pkgs.skopeo
               pkgs.buildah
