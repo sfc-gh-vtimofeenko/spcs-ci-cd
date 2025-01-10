@@ -132,11 +132,14 @@
                 {
                   help = "Run a hurl-based test";
                   name = "test-hurl";
-                  command = ''
-                    export HURL_port="''${DEMO_DOCKER_PORT}"
-                    export HURL_user="''${USER}"
-                    ${pkgs.lib.getExe pkgs.hurl} --test "''${PRJ_ROOT}/hurl-tests/"
-                  '';
+                  command =
+                    # bash
+                    ''
+                      export HURL_port="''${DEMO_DOCKER_PORT}"
+                      export HURL_user="''${USER}"
+                      ${pkgs.lib.getExe pkgs.hurl} --test "''${PRJ_ROOT}/hurl-tests/unit-tests"
+                    '';
+                  category = "test";
                 }
               ];
             packages = [
