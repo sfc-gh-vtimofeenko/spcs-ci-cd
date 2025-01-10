@@ -69,9 +69,8 @@
           devshells.default = {
             env = [
               {
-
                 name = "DEMO_DOCKER_PORT";
-                value = 8000;
+                value = 8001;
               }
             ];
 
