@@ -118,13 +118,15 @@
                 {
                   help = "Send sample request to /echo";
                   name = "demo-request-post-echo";
-                  command = ''
-                    ${curl} \
-                      --request POST \
-                      --header "Content-Type: application/json" \
-                      --data '{"data": [[0, "Hello"]]}' \
-                      http://localhost:''${DEMO_DOCKER_PORT}/echo
-                  '';
+                  command =
+                    # bash
+                    ''
+                      ${curl} \
+                        --request POST \
+                        --header "Content-Type: application/json" \
+                        --data '{"data": [[0, "Hello"]]}' \
+                        http://localhost:''${DEMO_DOCKER_PORT}/echo
+                    '';
                   category = "demo";
                 }
                 {
