@@ -141,6 +141,20 @@
                     '';
                   category = "test";
                 }
+                {
+                  help = "Run hurl test against service in SPCS";
+                  name = "test-spcs-hurl";
+                  command =
+                    # bash
+                    ''
+                      export HURL_auth_token=$($PRJ_ROOT/utils/spcs-jwt-to-auth-token)
+                      export HURL_url=''${ENDPOINT_URL}
+                      export HURL_expected_user=''${SNOWFLAKE_USER}
+
+                      ${pkgs.lib.getExe pkgs.hurl} --test "''${PRJ_ROOT}"/hurl-tests/integration-tests
+                    '';
+                  category = "test";
+                }
               ];
             packages = [
               pkgs.skopeo
@@ -148,6 +162,7 @@
               pkgs.act
               pkgs.hurl
               pkgs.curl
+              pkgs.jwt-cli
             ];
           };
         };
