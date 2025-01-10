@@ -31,25 +31,14 @@
             # With the local nginx.conf
             dockerImage =
               let
-                nginxConf = pkgs.writeText "nginx.conf" ''
-                  user nobody nobody;
-                  daemon off;
-                  error_log /dev/stdout info;
-                  pid /dev/null;
-                  events {}
-
-                  http {
-                    ${builtins.readFile ./nginx.conf}
-                  }
-                '';
-
+                nginxConf = pkgs.writeTextDir "conf/nginx.conf" (builtins.readFile ./nginx.conf);
               in
               pkgs.dockerTools.buildLayeredImage {
                 name = "spcs-ci-cd";
                 tag = "latest";
                 contents = [
                   pkgs.dockerTools.fakeNss
-                  pkgs.nginx
+                  pkgs.openresty
                 ];
 
                 extraCommands = ''
@@ -63,11 +52,11 @@
                 config = {
                   Cmd = [
                     "nginx"
-                    "-c"
+                    "-p"
                     nginxConf
                   ];
                   ExposedPorts = {
-                    "80/tcp" = { };
+                    "8001/tcp" = { };
                   };
                 };
               };
