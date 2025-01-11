@@ -14,7 +14,7 @@ in
     command = ''
       nix build .#packages.x86_64-linux.dockerImage
       docker load < result
-      docker run --rm -p \''${DEMO_DOCKER_PORT}:8001 --platform=linux/amd64 spcs-ci-cd:latest''; # NOTE: not providing docker in the devshell
+      docker run --rm -p ''${DEMO_DOCKER_PORT}:8001 --platform=linux/amd64 spcs-ci-cd:latest''; # NOTE: not providing docker in the devshell
   }
   # Requests to /
   # Just to show it works
