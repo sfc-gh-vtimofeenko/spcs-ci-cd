@@ -1,0 +1,33 @@
+---
+name: Build docker archive using nix
+
+on:
+  workflow_call:
+
+
+jobs:
+  build-nix:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_TAG: spcs-ci-cd
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Using nix to take better advantage of caching than apt-get update & friends
+      - uses: DeterminateSystems/nix-installer-action@main
+        with:
+          extra-conf: |-
+              experimental-features = pipe-operators nix-command flakes
+
+      - name: Build image (produce docker archive file)
+        run: |
+          nix build -o out .#default
+
+
+      # Upload artifact to github cache
+      - uses: actions/upload-artifact@v4
+        with:
+          path: ./out
+
+

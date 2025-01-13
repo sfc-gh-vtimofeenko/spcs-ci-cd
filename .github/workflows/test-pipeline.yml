@@ -1,0 +1,37 @@
+---
+name: End to end pipeline that builds the image, tests it locally, remotely and deploys it
+
+on:
+  workflow_dispatch: # Only run manually
+
+jobs:
+  build:
+    uses: ./.github/workflows/nix-build.yml
+
+  test-local:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          exit 1
+
+  deploy-to-spcs-test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          exit 1
+
+  test-spcs:
+    needs: deploy-to-spcs-test
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          exit 1
+
+  deploy-to-spcs-prod:
+    needs: test-spcs
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          exit 1
