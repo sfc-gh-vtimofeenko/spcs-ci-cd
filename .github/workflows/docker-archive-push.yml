@@ -34,6 +34,9 @@ jobs:
 
       # Using nix to take better advantage of caching than apt-get update & friends
       - uses: DeterminateSystems/nix-installer-action@main
+        with:
+          extra-conf: |-
+              experimental-features = pipe-operators nix-command flakes
 
       # NOTE: nix cache action collects telemetry
       # See https://github.com/DeterminateSystems/magic-nix-cache
