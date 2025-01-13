@@ -81,6 +81,7 @@
               [
                 ./utils/devshell-cmds/demo.nix
                 ./utils/devshell-cmds/test.nix
+                ./utils/devshell-cmds/ci.nix
               ]
               |> map (file: import file { inherit pkgs; })
               |> pkgs.lib.flatten;
