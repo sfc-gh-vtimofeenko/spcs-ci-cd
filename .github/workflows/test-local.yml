@@ -21,6 +21,9 @@ jobs:
       # Set up cache to cache build-related things
       - uses: DeterminateSystems/magic-nix-cache-action@main
 
+      # Download artifact from the build step
+      - uses: actions/download-artifact@v4
+
       # Start detached docker process
       - name: Run docker image in container
         run: |
