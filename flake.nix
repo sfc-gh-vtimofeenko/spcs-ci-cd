@@ -39,6 +39,8 @@
                 contents = [
                   pkgs.dockerTools.fakeNss
                   pkgs.openresty
+                  pkgs.snowflake-cli # actually executed the command
+                  pkgs.bash # Provides `sh` for the openresty's shell.run
                 ];
 
                 extraCommands = ''
