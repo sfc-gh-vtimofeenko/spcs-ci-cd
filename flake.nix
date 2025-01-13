@@ -26,11 +26,12 @@
           packages = rec {
             default = dockerImage;
 
-            # Basically the example layered image from:
+            # Based on the example layered image from:
             # https://github.com/NixOS/nixpkgs/blob/master/pkgs/build-support/docker/examples.nix#L63
             # With the local nginx.conf
             dockerImage =
               let
+                # writeTextDir produces dir which is what nginx needs for the `-p` flag
                 nginxConf = pkgs.writeTextDir "conf/nginx.conf" (builtins.readFile ./nginx.conf);
               in
               pkgs.dockerTools.buildLayeredImage {
