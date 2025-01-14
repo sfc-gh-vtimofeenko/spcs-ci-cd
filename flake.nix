@@ -65,7 +65,7 @@
               };
 
             # Pass through skopeo for pinning
-            inherit (pkgs) skopeo;
+            inherit (pkgs) skopeo snowflake-cli;
 
           };
 
