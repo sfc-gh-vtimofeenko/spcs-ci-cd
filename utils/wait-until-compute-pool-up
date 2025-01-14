@@ -1,0 +1,24 @@
+POOL_START_TIMEOUT="10m" # GNU timeout-compatible string to wait
+
+GET_POOL_STATE_CMD=( snow spcs compute-pool describe "${TEST_COMPUTE_POOL}" --format JSON)
+
+POOL_INITIAL_STATE="$("${GET_POOL_STATE_CMD[@]}" | jq --raw-output '.[].state')"
+
+if [ "$POOL_INITIAL_STATE" = "SUSPENDED" ]; then
+  echo "Starting the compute pool"
+  snow spcs compute-pool resume "${TEST_COMPUTE_POOL}"
+fi
+
+DESIRED_STATES=("ACTIVE" "IDLE")
+
+
+# Runs a command that checks if the pool is in one of the needed states. Times out.
+timeout "$POOL_START_TIMEOUT" bash -c "
+until [[ \"${DESIRED_STATES[*]}\" =~ \$POOL_STATE ]]; do
+    echo \"Polling compute pool state\"
+    export POOL_STATE=\$(${GET_POOL_STATE_CMD[*]} | jq --raw-output '.[].state')
+    echo \"Pool $TEST_COMPUTE_POOL is \$POOL_STATE\"
+    sleep 1
+done
+echo \"Done waiting. Compute pool is now \$POOL_STATE\"
+"

@@ -1,4 +1,4 @@
-_:
+{ pkgs, ... }:
 let
   settings.category = "ci";
   # This is the file name of the docker image as downloaded from GH artifact cache
@@ -26,10 +26,16 @@ in
     help = "Make sure test compute pool is started";
     name = "snowcli-start-pool-wait-until-started";
     command =
-      # bash
-      ''
-        exit 1
-      '';
+      {
+        name = "wait-until-compute-pool-up";
+        runtimeInputs = [
+          pkgs.snowflake-cli
+          pkgs.coreutils-full
+        ];
+        text = builtins.readFile ../wait-until-compute-pool-up;
+      }
+      |> pkgs.writeShellApplication
+      |> lib.getExe;
   }
   # Creates SPCS service to perform tests against
   # Blocks until service is up or times out
