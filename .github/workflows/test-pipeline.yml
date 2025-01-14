@@ -15,6 +15,7 @@ jobs:
   deploy-to-spcs-test:
     uses: ./.github/workflows/deploy-to-spcs-test.yml
     needs: build
+    secrets: inherit
 
   test-spcs:
     needs: deploy-to-spcs-test
