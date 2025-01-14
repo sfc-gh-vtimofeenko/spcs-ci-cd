@@ -1,5 +1,5 @@
 ---
-name: Build docker archive using nix
+name: Run tests against docker container running locally
 
 on:
   workflow_call:
