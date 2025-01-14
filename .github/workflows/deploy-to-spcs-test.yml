@@ -47,7 +47,7 @@ jobs:
       - name: Push image to Snowflake
         run: |
           SKOPEO_CMD="nix run .#skopeo --"
-          SNOW_CMD="nix run .#snowflake-cli --"
+          SNOW_CMD="nix run .#snowflake-cli -- --config-file ./config.toml"
 
           $SNOW_CMD spcs image-registry token --format=JSON | $SKOPEO_CMD login "${{ secrets.REGISTRY_URL }}" --username 0sessiontoken --password-stdin
 
