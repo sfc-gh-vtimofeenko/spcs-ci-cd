@@ -4,6 +4,8 @@ let
   # This is the file name of the docker image as downloaded from GH artifact cache
   settings.ghArtifactName = "artifact/out";
   settings.imageTag = "spcs-ci-cd:latest";
+
+  inherit (pkgs) lib;
 in
 [
   {
