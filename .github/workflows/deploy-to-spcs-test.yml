@@ -1,0 +1,75 @@
+---
+name: Deploy and test service in SPCS
+
+on:
+  workflow_call:
+
+jobs:
+  deploy-to-spcs:
+    runs-on: ubuntu-latest
+    env:
+      SNOWFLAKE_AUTHENTICATOR: SNOWFLAKE_JWT
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_PRIVATE_KEY_PATH: /home/runner/work/key.p8
+      IMAGE_TAG: spcs-ci-cd
+      TEST_SERVICE_NAME: CI_CD_TEST_SERVICE
+      TEST_COMPUTE_POOL: CI_CD_TEST
+
+    steps:
+      - name: Mask repo-related values in Github logs
+        # REGISTRY_URL can be retrieved by DESC IMAGE REPOSITORY <PATH>
+        run: |
+          IFS='/' read -ra URL_PARTS <<< "${{ secrets.REGISTRY_URL }}"
+          for i in "${URL_PARTS[@]}"; do
+             echo "::add-mask::$i"
+          done
+
+      - uses: actions/checkout@v4
+
+      - uses: DeterminateSystems/nix-installer-action@main
+        with:
+          extra-conf: |-
+              experimental-features = pipe-operators nix-command flakes
+
+      # Set up cache to cache build-related things
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      # Download artifact from the build step
+      - uses: actions/download-artifact@v4
+
+      - name: Setup authentication
+        run: |
+          cat <<EOF > ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
+          ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+          EOF
+
+      - name: Push image to Snowflake
+        run: |
+          SKOPEO_CMD="nix run .#skopeo --"
+          SNOW_CMD="nix run .#snowflake-cli --"
+
+          $SNOW_CMD spcs image-registry token --format=JSON | $SKOPEO_CMD login "${{ secrets.REGISTRY_URL }}" --username 0sessiontoken --password-stdin
+
+          TAG="${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_TAG }}:latest"
+          $SKOPEO_CMD copy \
+              --additional-tag "$TAG" \
+              --insecure-policy `#otherwise fails loading policy.json `\
+              docker-archive:artifact/out \
+              docker://"$TAG"
+
+      - name: Start test container pool
+        run: |
+          exit 1
+
+      - name: Create test service
+        run: |
+          exit 1
+
+      - name: Run tests
+        run: |
+          exit 1
+
+      - name: Tear down test service
+        run: |
+          exit 1
