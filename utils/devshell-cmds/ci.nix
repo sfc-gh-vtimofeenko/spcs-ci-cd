@@ -102,7 +102,7 @@ in
     command =
       # bash
       ''
-        export ENDPOINT_URL=$(${snow} spcs service list-endpoints SPCS.CI.CI_CD_TEST_SRV --format=json | ${jq} --raw-output '.[].ingress_url')
+        export ENDPOINT_URL=$(${snow} spcs service list-endpoints $TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME --format=json | ${jq} --raw-output '.[].ingress_url')
 
         test-spcs-hurl
       '';
