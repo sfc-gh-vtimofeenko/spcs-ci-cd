@@ -95,6 +95,8 @@ jobs:
           nix develop .#default --command "ci-run-tests-against-spcs"
 
       - name: Tear down test service
-        # TODO: always run this but with a comment
+        if: always()
         run: |
-          exit 1
+          SNOW_CMD="nix run .#snowflake-cli -- "
+          $SNOW_CMD sql --query "DROP SERVICE IF EXISTS \"$TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME\""
+
