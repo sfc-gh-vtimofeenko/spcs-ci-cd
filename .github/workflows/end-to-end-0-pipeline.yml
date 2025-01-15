@@ -6,23 +6,16 @@ on:
 
 jobs:
   build:
-    uses: ./.github/workflows/nix-build.yml
+    uses: ./.github/workflows/end-to-end-1-build.yml
 
-  test-local:
-    uses: ./.github/workflows/test-local.yml
+  test-in-ci:
+    uses: ./.github/workflows/end-to-end-2-test-in-ci.yml
     needs: build
 
-  deploy-to-spcs-test:
-    uses: ./.github/workflows/deploy-to-spcs-test.yml
+  test-in-spcs:
+    uses: ./.github/workflows/end-to-end-3-test-in-spcs.yml
     needs: build
     secrets: inherit
-
-  test-spcs:
-    needs: deploy-to-spcs-test
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          exit 1
 
   deploy-to-spcs-prod:
     needs: test-spcs
