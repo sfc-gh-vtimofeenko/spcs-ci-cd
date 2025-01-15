@@ -31,8 +31,8 @@ in
       {
         name = "wait-until-compute-pool-up";
         runtimeInputs = [
-          pkgs.snowflake-cli
-          pkgs.coreutils-full
+          pkgs.snowflake-cli # `needed for snow`
+          pkgs.coreutils-full # needed for `timeout`
         ];
         text = builtins.readFile ../wait-until-compute-pool-up;
       }
