@@ -49,7 +49,6 @@ in
     command =
       # bash
       ''
-        set -x
         SPEC_FILE=$(mktemp)
         trap "rm -f ''${SPEC_FILE}" EXIT
 
