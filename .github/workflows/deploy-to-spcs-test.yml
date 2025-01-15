@@ -17,6 +17,7 @@ jobs:
       TEST_COMPUTE_POOL: CI_CD_TEST
       TEST_SERVICE_DB: SPCS
       TEST_SERVICE_SCHEMA: CI
+      TEST_SERVICE_WH: ADHOC
 
     steps:
       - name: Mask repo-related values in Github logs

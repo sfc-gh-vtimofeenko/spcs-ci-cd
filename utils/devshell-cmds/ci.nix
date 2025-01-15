@@ -65,7 +65,7 @@ in
 
         EOF
 
-        ${snow} spcs service create "$TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME" --compute-pool "$TEST_COMPUTE_POOL" --spec-path "$SPEC_FILE"
+        ${snow} spcs service create "$TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME" --compute-pool "$TEST_COMPUTE_POOL" --spec-path "$SPEC_FILE" --query-warehouse "$TEST_SERVICE_WH"
 
         # TODO: break on broken service
         # Block until service is "RUNNING"
