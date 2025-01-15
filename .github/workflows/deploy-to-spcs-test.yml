@@ -71,6 +71,7 @@ jobs:
       - name: Create test service
         run: |
           export SNOWFLAKE_HOME=$(pwd)
+          export REGISTRY_URL=${{ secrets.REGISTRY_URL }}
           nix develop .#default --command "ci-snowcli-create-test-service"
 
       - name: Run tests
