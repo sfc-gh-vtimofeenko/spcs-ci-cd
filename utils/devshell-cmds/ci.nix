@@ -90,6 +90,9 @@ in
           echo \"Service $TEST_SERVICE_NAME is: \$SERVICE_ENDPOINT\"
           sleep 1
         done
+        echo \"Masking the URL.\"
+        echo \"::add-mask::\$SERVICE_ENDPOINT\"
+
         echo \"Done waiting. Service endpoint: \$SERVICE_ENDPOINT\"
         "
 
