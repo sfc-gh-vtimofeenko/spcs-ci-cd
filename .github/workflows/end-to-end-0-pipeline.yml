@@ -25,6 +25,4 @@ jobs:
   deploy-to-spcs-prod:
     needs: test-spcs
     runs-on: ubuntu-latest
-    steps:
-      - run: |
-          exit 0
+    uses: ./.github/workflows/end-to-end-4-deploy-to-prod.yml

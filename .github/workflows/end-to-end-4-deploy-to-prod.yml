@@ -1,0 +1,26 @@
+---
+name: Deploy the service into production in SPCS
+
+on:
+  workflow_call:
+
+jobs:
+  deploy-to-prod:
+    runs-on: ubuntu-latest
+
+    steps:
+      # FIXME: implement
+      - name: Mask repo-related values in Github logs
+        run: |
+          exit 0
+
+      # FIXME: implement
+      - name: Setup snowcli
+        run: |
+          exit 0
+
+      # This step assumes the image is tagged as the same tag as in the previous "test" step
+      # FIXME: implement
+      - name: Create the service
+        run: |
+          exit 0
