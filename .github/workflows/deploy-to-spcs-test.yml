@@ -63,15 +63,18 @@ jobs:
 
       - name: Start test container pool
         run: |
+          export SNOWFLAKE_HOME=$(pwd)
           nix develop .#default --command "ci-snowcli-start-pool-wait-until-started"
 
 
       - name: Create test service
         run: |
+          export SNOWFLAKE_HOME=$(pwd)
           nix develop .#default --command "snowcli-create-test-service"
 
       - name: Run tests
         run: |
+          export SNOWFLAKE_HOME=$(pwd)
 
           # jwt parsing needs file with 'pem' extension
           export SECRET_PATH="/home/runner/work/key.pem"
