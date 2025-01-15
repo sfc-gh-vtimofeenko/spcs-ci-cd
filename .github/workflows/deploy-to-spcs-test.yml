@@ -82,7 +82,7 @@ jobs:
           export SECRET_PATH="/home/runner/work/key.pem"
           cp ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }} $SECRET_PATH
 
-          nix develop .#default --command "run-tests-against-spcs"
+          nix develop .#default --command "ci-run-tests-against-spcs"
 
       - name: Tear down test service
         # TODO: always run this but with a comment
