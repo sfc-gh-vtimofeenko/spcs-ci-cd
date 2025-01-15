@@ -92,16 +92,19 @@ in
         done
         echo \"Done waiting. Service endpoint: \$SERVICE_ENDPOINT\"
         "
+
       '';
   }
   # Retrieves the temporary service endpoint to be used for tests
   {
-    help = "Get the temporary service endpoint";
-    name = "snowcli-get-test-service-url";
+    help = "Run the test suite against the spcs test service";
+    name = "run-tests-against-spcs";
     command =
       # bash
       ''
-        exit 1
+        export ENDPOINT_URL=$(${snow} spcs service list-endpoints SPCS.CI.CI_CD_TEST_SRV --format=json | ${jq} --raw-output '.[].ingress_url')
+
+        test-spcs-hurl
       '';
   }
 ]
