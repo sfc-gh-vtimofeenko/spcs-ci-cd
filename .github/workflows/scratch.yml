@@ -1,0 +1,13 @@
+---
+name: Scratch
+
+on:
+  workflow_dispatch: # Only run manually
+
+jobs:
+  scratch:
+    steps:
+      - uses: ./.github/workflows/end-to-end-99-intro.yml
+
+      - run: |
+          nix eval --expr "1 |> builtins.add 1"
