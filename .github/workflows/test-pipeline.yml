@@ -18,7 +18,7 @@ jobs:
     secrets: inherit
 
   deploy-to-spcs-prod:
-    needs: test-spcs
+    needs: deploy-to-spcs-test
     runs-on: ubuntu-latest
     steps:
       - run: |
