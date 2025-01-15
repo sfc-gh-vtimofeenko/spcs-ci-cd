@@ -100,5 +100,5 @@ jobs:
         if: always()
         run: |
           SNOW_CMD="nix run .#snowflake-cli -- "
-          $SNOW_CMD sql --query "DROP SERVICE IF EXISTS \"$TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME\""
+          $SNOW_CMD sql --query "DROP SERVICE IF EXISTS $TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME"
 
