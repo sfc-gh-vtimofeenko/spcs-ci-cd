@@ -71,7 +71,7 @@ jobs:
       - name: Create test service
         run: |
           export SNOWFLAKE_HOME=$(pwd)
-          nix develop .#default --command "snowcli-create-test-service"
+          nix develop .#default --command "ci-snowcli-create-test-service"
 
       - name: Run tests
         run: |
