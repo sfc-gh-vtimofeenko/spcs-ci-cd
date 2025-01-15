@@ -61,7 +61,7 @@ jobs:
       #         docker-archive:artifact/out \
       #         docker://"$TAG"
 
-      - name: Start test container pool
+      - name: Start test compute pool
         run: |
           export SNOWFLAKE_HOME=$(pwd)
           chmod 0600 $SNOWFLAKE_HOME/config.toml
