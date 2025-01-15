@@ -64,6 +64,7 @@ jobs:
       - name: Start test container pool
         run: |
           export SNOWFLAKE_HOME=$(pwd)
+          chmod 0600 $SNOWFLAKE_HOME/config.toml
           nix develop .#default --command "ci-snowcli-start-pool-wait-until-started"
 
 
