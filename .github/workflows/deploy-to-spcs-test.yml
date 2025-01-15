@@ -18,6 +18,7 @@ jobs:
       TEST_SERVICE_DB: SPCS
       TEST_SERVICE_SCHEMA: CI
       TEST_SERVICE_WH: ADHOC
+      ROLE_WITH_ACCESS_TO_ENDPOINT: SPCS_CI_CD_PUSHER
 
     steps:
       - name: Mask repo-related values in Github logs
