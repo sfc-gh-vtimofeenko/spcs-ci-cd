@@ -24,7 +24,7 @@ in
         export HURL_url=''${ENDPOINT_URL}
         export HURL_expected_user=''${SNOWFLAKE_USER}
 
-        ${pkgs.lib.getExe pkgs.hurl} --test "''${PRJ_ROOT}"/hurl-tests/integration-tests
+        ${pkgs.lib.getExe pkgs.hurl} --test --very-verbose "''${PRJ_ROOT}"/hurl-tests/integration-tests
       '';
     category = "test";
   }
