@@ -60,16 +60,23 @@ jobs:
 
       - name: Start test container pool
         run: |
-          exit 1
+          nix develop .#default --command "ci-snowcli-start-pool-wait-until-started"
+
 
       - name: Create test service
         run: |
-          exit 1
+          nix develop .#default --command "snowcli-create-test-service"
 
       - name: Run tests
         run: |
-          exit 1
+
+          # jwt parsing needs file with 'pem' extension
+          export SECRET_PATH="/home/runner/work/key.pem"
+          cp ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }} $SECRET_PATH
+
+          nix develop .#default --command "run-tests-against-spcs"
 
       - name: Tear down test service
+        # TODO: always run this but with a comment
         run: |
           exit 1
