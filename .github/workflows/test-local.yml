@@ -15,6 +15,7 @@ jobs:
       # Using nix to take better advantage of caching than apt-get update & friends
       - uses: DeterminateSystems/nix-installer-action@main
         with:
+          source-tag: v0.32.3
           extra-conf: |-
               experimental-features = pipe-operators nix-command flakes
 
