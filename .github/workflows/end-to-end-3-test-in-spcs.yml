@@ -82,10 +82,9 @@ jobs:
       - name: Push image to Snowflake
         run: utils/skopeo-push-to-snowflake-registry
 
-
+      # This step starts the test compute pool where the test service will be running.
       - name: Start test compute pool
-        run: |
-          nix develop .#default --command "ci-snowcli-start-pool-wait-until-started"
+        run: utils/start-test-compute-pool-wait-until-up
 
 
       - name: Create test service

@@ -41,17 +41,18 @@ in
   # The test compute pool should be created independently
   # This command will start the compute pool and block until it's up
   # If the compute pool is already up -- the command will short-circuit to success
-  {
+  rec {
     help = "Make sure test compute pool is started";
-    name = "snowcli-start-pool-wait-until-started";
+    name = "start-test-compute-pool-wait-until-up";
     command =
       {
-        name = "wait-until-compute-pool-up";
+        inherit name;
         runtimeInputs = [
           pkgs.snowflake-cli # `needed for snow`
+          pkgs.jq
           pkgs.coreutils-full # needed for `timeout`
         ];
-        text = builtins.readFile ../wait-until-compute-pool-up;
+        text = builtins.readFile (./../. + "/${name}");
       }
       |> pkgs.writeShellApplication
       |> lib.getExe;

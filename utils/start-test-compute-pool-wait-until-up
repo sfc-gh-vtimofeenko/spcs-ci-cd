@@ -1,3 +1,23 @@
+#!/usr/bin/env bash
+#
+# Starts a container pool and block until it's in a running state or a timeout
+# is reached.
+#
+# Needs:
+# - Binaries:
+#   - snowflake-cli (snow)
+#   - jq :: to parse and operate on json output
+#   - timeout :: usually accessible from coreutils if not already present
+#
+# - Variables:
+#   - TEST_COMPUTE_POOL :: name of the compute pool to start.
+#
+#     The CI user has to be able to read the pool state and start it. This
+#     translates to the following privileges in Snowflake:
+#     - MONITOR
+#     - OPERATE
+#
+
 POOL_START_TIMEOUT="10m" # GNU timeout-compatible string to wait
 
 GET_POOL_STATE_CMD=( snow spcs compute-pool describe "${TEST_COMPUTE_POOL}" --format JSON)
