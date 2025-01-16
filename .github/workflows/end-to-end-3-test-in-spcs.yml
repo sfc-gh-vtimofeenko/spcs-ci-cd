@@ -67,12 +67,15 @@ jobs:
           # snowflake-cli checks the permissions on the confg file and complains if it's not 0600. Git does store permissions to this degree.
           chmod 0600 $SNOWFLAKE_HOME/config.toml
 
+      - name: Add snowflake-cli
+        run: |
+          nix profile install .#snowflake-cli
+
       - name: Push image to Snowflake
         run: |
           SKOPEO_CMD="nix run .#skopeo --"
-          SNOW_CMD="nix run .#snowflake-cli -- --config-file ./config.toml"
 
-          $SNOW_CMD spcs image-registry token --format=JSON | $SKOPEO_CMD login "${{ secrets.REGISTRY_URL }}" --username 0sessiontoken --password-stdin
+          snow spcs image-registry token --format=JSON | $SKOPEO_CMD login "${{ secrets.REGISTRY_URL }}" --username 0sessiontoken --password-stdin
 
           TAG="${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_TAG }}:latest"
           $SKOPEO_CMD copy \
