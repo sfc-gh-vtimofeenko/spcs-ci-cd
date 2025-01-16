@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+#
+# Creates a SPCS service to run tests against. Waits until the service is
+# accessible via URL
+#
+# Needs:
+# - Binaries:
+#   - snowflake-cli (snow)
+#   - jq :: to parse and operate on json output
+#   - timeout :: usually accessible from coreutils if not already present
+#
+# - Variables:
+#   - TEST_COMPUTE_POOL :: name of the compute pool where the service is
+#   created.
+#
+#     The CI user has to be able to create a service in the compute pool. This
+#     translates to USAGE privilege.
+#
+#   - TEST_SERVICE_DB, TEST_SERVICE_SCHEMA, TEST_SERVICE_NAME :: parts of the
+#   test service location.
+#
+#       Requirements:
+#       - USAGE on $TEST_SERVICE_DB
+#       - CREATE SERVICE on $TEST_SERVICE_SCHEMA
+#       - USAGE on $TEST_SERVICE_SCHEMA
+#
+#   - REPOSITORY_URL :: URL to the image repository.
+#
+#     The URL can be retrieved by running DESCRIBE IMAGE REPOSITORY. It's
+#     usually in format <org-name>-<account-name>.registry.
+#     snowflakecomputing.com/<db>/<schema>/<repo-name>
+#
+#   - IMAGE_TAG :: last component of the image tag.
+#
+#     In this repo it's 'spcs-ci-cd:latest'
+#
+#   - DEMO_DOCKER_PORT :: which port the service listens on inside the
+#     container.
+#
+#     8001 in the reference.
+#
+# - Other:
+#   - BIND SERVICE ENDPOINT privilege on ACCOUNT
+set -euo pipefail
+
+# Set up a simple service schema
+# Other settings:
+# https://docs.snowflake.com/en/developer-guide/snowpark-container-services/specification-reference
+SPEC_FILE=$(mktemp)
+
+# shellcheck disable=SC2064
+trap "rm -f $SPEC_FILE" EXIT
+
+cat<<EOF >"$SPEC_FILE"
+spec:
+  containers:
+    - name: test-service
+      image: $REPOSITORY_URL/$IMAGE_TAG
+  command:
+    - breakme
+  endpoints:
+    - name: main
+      port: $DEMO_DOCKER_PORT
+      public: true
+
+EOF
+
+snow spcs service create \
+    "$TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME" \
+    --compute-pool "$TEST_COMPUTE_POOL" --spec-path "$SPEC_FILE"
+
+DESIRED_STATE="RUNNING"
+SERVICE_START_TIMEOUT="10m"
+timeout "$SERVICE_START_TIMEOUT" bash -c "
+until [[ \"$DESIRED_STATE\" = \$SERVICE_STATE ]]; do
+  echo \"Polling service state\"
+  export SERVICE_STATE=\$(snow spcs service describe $TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME --format=json | jq --raw-output '.[].status')
+  echo \"Service $TEST_SERVICE_NAME is \$SERVICE_STATE\"
+  sleep 1
+done
+echo \"Done waiting. Service is now \$SERVICE_STATE\"
+"
+
+# Block until ingress_url is filled (starts with ingress_url)
+SERVICE_ENDPOINT_TIMEOUT="10m"
+timeout "$SERVICE_ENDPOINT_TIMEOUT" bash -c "
+until [[ \$SERVICE_ENDPOINT =~ \".snowflakecomputing.app\" ]]; do
+  echo \"Polling service endpoint\"
+  export SERVICE_ENDPOINT=\$(snow spcs service list-endpoints $TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME --format=json | jq --raw-output '.[].ingress_url')
+  echo \"Service $TEST_SERVICE_NAME is: \$SERVICE_ENDPOINT\"
+  sleep 1
+done
+echo \"Done waiting. Service endpoint: \$SERVICE_ENDPOINT\"
+"
+
+

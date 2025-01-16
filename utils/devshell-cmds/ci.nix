@@ -73,57 +73,21 @@ in
 
   # Creates SPCS service to perform tests against
   # Blocks until service is up or times out
-  {
+  rec {
     help = "Set up a temporary service on the test service";
-    name = "snowcli-create-test-service";
+    name = "create-test-service-wait-until-up";
     command =
-      # bash
-      ''
-        set -x
-        SPEC_FILE=$(mktemp)
-        trap "rm -f ''${SPEC_FILE}" EXIT
-
-        cat<<EOF >$SPEC_FILE
-        spec:
-          containers:
-            - name: test-service
-              image: $REGISTRY_URL/${settings.imageTag}
-          endpoints:
-            - name: main
-              port: $DEMO_DOCKER_PORT
-              public: true
-
-        EOF
-
-        ${snow} spcs service create "$TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME" --compute-pool "$TEST_COMPUTE_POOL" --spec-path "$SPEC_FILE"
-
-        # TODO: break on broken service
-        # Block until service is "RUNNING"
-        DESIRED_STATE="RUNNING"
-        SERVICE_START_TIMEOUT="10m"
-        timeout "$SERVICE_START_TIMEOUT" bash -c "
-        until [[ \"$DESIRED_STATE\" = \$SERVICE_STATE ]]; do
-          echo \"Polling service state\"
-          export SERVICE_STATE=\$(${snow} spcs service describe $TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME --format=json | jq --raw-output '.[].status')
-          echo \"Service $TEST_SERVICE_NAME is \$SERVICE_STATE\"
-          sleep 1
-        done
-        echo \"Done waiting. Service is now \$SERVICE_STATE\"
-        "
-
-        # Block until ingress_url is filled (starts with ingress_url)
-        SERVICE_ENDPOINT_TIMEOUT="10m"
-        timeout "$SERVICE_ENDPOINT_TIMEOUT" bash -c "
-        until [[ \$SERVICE_ENDPOINT =~ ".snowflakecomputing.app" ]]; do
-          echo \"Polling service endpoint\"
-          export SERVICE_ENDPOINT=\$(${snow} spcs service list-endpoints $TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME --format=json | jq --raw-output '.[].ingress_url')
-          echo \"Service $TEST_SERVICE_NAME is: \$SERVICE_ENDPOINT\"
-          sleep 1
-        done
-        echo \"Done waiting. Service endpoint: \$SERVICE_ENDPOINT\"
-        "
-
-      '';
+      {
+        inherit name;
+        runtimeInputs = [
+          pkgs.snowflake-cli # `needed for snow`
+          pkgs.jq
+          pkgs.coreutils-full # needed for `timeout`
+        ];
+        text = builtins.readFile (./../. + "/${name}");
+      }
+      |> pkgs.writeShellApplication
+      |> lib.getExe;
   }
   # Retrieves the temporary service endpoint to be used for tests
   {
