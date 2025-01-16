@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# Runs the downloaded artifact in docker
+#
+# Needs:
+# - Binaries:
+#   - docker
+#
+# - Variables:
+#   - IMAGE_TAG :: last component of the image tag.
+#
+#     In this repo it's 'spcs-ci-cd:latest'
+#
+#   - ARTIFACT_PATH :: path to the archive.
+#   - DEMO_DOCKER_PORT :: common port used in testing
+set -euo pipefail
+
+docker load < "$ARTIFACT_PATH"
+docker run --rm \
+  --detach \
+  -p "$DEMO_DOCKER_PORT":8001 \
+  --platform=linux/amd64 IMAGE_TAG
+

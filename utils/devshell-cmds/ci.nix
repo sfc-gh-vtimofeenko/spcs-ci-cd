@@ -6,27 +6,20 @@
 { pkgs, ... }:
 let
   settings.category = "ci";
-  # This is the file name of the docker image as downloaded from GH artifact cache
-  settings.ghArtifactName = "artifact/out";
-  settings.imageTag = "spcs-ci-cd:latest";
-
   inherit (pkgs) lib;
-  snow = lib.getExe pkgs.snowflake-cli;
-  jq = lib.getExe pkgs.jq;
 in
 [
-  {
+  rec {
     help = "Run docker in GH action";
     name = "docker-run";
     command =
-      # bash
-      ''
-        docker load < ${settings.ghArtifactName}
-        docker run --rm \
-          --detach \
-          -p ''${DEMO_DOCKER_PORT}:8001 \
-          --platform=linux/amd64 ${settings.imageTag}
-      '';
+      {
+        inherit name;
+        runtimeInputs = [ ];
+        text = builtins.readFile (./../. + "/${name}");
+      }
+      |> pkgs.writeShellApplication
+      |> lib.getExe;
   }
   rec {
     help = "Push the docker archive into Snowflake";

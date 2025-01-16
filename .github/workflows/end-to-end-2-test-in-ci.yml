@@ -26,8 +26,7 @@ jobs:
 
       # Start detached docker process
       - name: Run docker image in container
-        run: |
-          nix develop .#default --command "ci-docker-run"
+        run: utils/docker-run
 
       # Run the tests on the docker image running on the same machine
       - name: Run tests
