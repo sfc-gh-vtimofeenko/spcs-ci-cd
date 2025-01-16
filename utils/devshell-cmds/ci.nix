@@ -23,6 +23,21 @@ in
           --platform=linux/amd64 ${settings.imageTag}
       '';
   }
+  rec {
+    help = "Push the docker archive into Snowflake";
+    name = "skopeo-push-to-snowflake-registry";
+    command =
+      {
+        inherit name;
+        runtimeInputs = [
+          pkgs.snowflake-cli # for `snow`
+          pkgs.skopeo # for `skopeo`
+        ];
+        text = builtins.readFile ../skopeo-push-to-snowflake-registry;
+      }
+      |> pkgs.writeShellApplication
+      |> lib.getExe;
+  }
   # The test compute pool should be created independently
   # This command will start the compute pool and block until it's up
   # If the compute pool is already up -- the command will short-circuit to success

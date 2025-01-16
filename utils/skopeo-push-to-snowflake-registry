@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#
+# Takes a docker archive and pushes it into Snowflake image repository.
+#
+# Needs:
+# - Binaries:
+#   - skopeo
+#   - snowflake-cli (snow)
+#
+# - Variables:
+#   - REPOSITORY_URL :: URL to the image repository.
+#
+#     The URL can be retrieved by running DESCRIBE IMAGE REPOSITORY. It's
+#     usually in format <org-name>-<account-name>.registry.
+#     snowflakecomputing.com/<db>/<schema>/<repo-name>
+#
+#   - IMAGE_TAG :: last component of the image tag.
+#
+#     In this repo it's 'spcs-ci-cd:latest'
+#
+#   - ARTIFACT_PATH :: path to the archive.
+set -euo pipefail
+
+# Authenticate and pass the token to skopeo.
+# snow does not need the repository URL as long as it has a properly configured
+# connection
+snow spcs image-registry token --format=JSON |
+    skopeo login "$REPOSITORY_URL" --username 0sessiontoken --password-stdin
+
+# Construct the full tag to push the image as
+SKOPEO_TAG="$REPOSITORY_URL/$IMAGE_TAG"
+
+# Copy image from local to remote
+skopeo copy \
+    --additional-tag "$SKOPEO_TAG" \
+    --insecure-policy `#otherwise fails loading policy.json`
+    docker-archive:"$ARTIFACT_PATH" `#see man skopeo for alternative sources` \
+    docker://"$SKOPEO_TAG"
+

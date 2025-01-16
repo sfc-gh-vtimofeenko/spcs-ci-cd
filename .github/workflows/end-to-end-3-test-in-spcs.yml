@@ -71,18 +71,17 @@ jobs:
         run: |
           nix profile install .#snowflake-cli
 
-      - name: Push image to Snowflake
+      # Default version of skopeo provided in the runners is a bit old
+      # This step installs a more up to date version of skopeo
+      - name: Add skopeo
         run: |
-          SKOPEO_CMD="nix run .#skopeo --"
+          nix profile install .#skopeo
 
-          snow spcs image-registry token --format=JSON | $SKOPEO_CMD login "${{ secrets.REGISTRY_URL }}" --username 0sessiontoken --password-stdin
+      # This step uses skopeo to push the docker archive into Snowflake.
+      # snowflake-cli is used to generate the authentication using keypair
+      - name: Push image to Snowflake
+        run: utils/skopeo-push-to-snowflake-registry
 
-          TAG="${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_TAG }}:latest"
-          $SKOPEO_CMD copy \
-              --additional-tag "$TAG" \
-              --insecure-policy `#otherwise fails loading policy.json `\
-              docker-archive:artifact/out \
-              docker://"$TAG"
 
       - name: Start test compute pool
         run: |
