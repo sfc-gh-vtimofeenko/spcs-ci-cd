@@ -56,8 +56,6 @@ spec:
   containers:
     - name: test-service
       image: $REPOSITORY_URL/$IMAGE_TAG
-  command:
-    - breakme
   endpoints:
     - name: main
       port: $DEMO_DOCKER_PORT
@@ -69,21 +67,31 @@ snow spcs service create \
     "$TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME" \
     --compute-pool "$TEST_COMPUTE_POOL" --spec-path "$SPEC_FILE"
 
-DESIRED_STATE="RUNNING"
+TERMINAL_STATES=("RUNNING" "FAILED")
+
 SERVICE_START_TIMEOUT="10m"
-timeout "$SERVICE_START_TIMEOUT" bash -c "
-until [[ \"$DESIRED_STATE\" = \$SERVICE_STATE ]]; do
+timeout --foreground `# allows propagating sigtem to the started command` \
+    "$SERVICE_START_TIMEOUT" bash -c "
+until [[ \"${TERMINAL_STATES[*]}\" =~ \$SERVICE_STATE ]]; do
   echo \"Polling service state\"
   export SERVICE_STATE=\$(snow spcs service describe $TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME --format=json | jq --raw-output '.[].status')
   echo \"Service $TEST_SERVICE_NAME is \$SERVICE_STATE\"
   sleep 1
 done
-echo \"Done waiting. Service is now \$SERVICE_STATE\"
 "
+
+FINAL_SERVICE_STATE=$(snow spcs service describe "$TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME" --format=json | jq --raw-output '.[].status')
+echo "Done waiting. Service is now $FINAL_SERVICE_STATE"
+
+if [[ $FINAL_SERVICE_STATE = "FAILED" ]]; then
+    echo "Service failed during initial startup. Please check the logs."
+    exit 1
+fi
 
 # Block until ingress_url is filled (starts with ingress_url)
 SERVICE_ENDPOINT_TIMEOUT="10m"
-timeout "$SERVICE_ENDPOINT_TIMEOUT" bash -c "
+timeout --foreground `# allows propagating sigtem to the started command` \
+     "$SERVICE_ENDPOINT_TIMEOUT" bash -c "
 until [[ \$SERVICE_ENDPOINT =~ \".snowflakecomputing.app\" ]]; do
   echo \"Polling service endpoint\"
   export SERVICE_ENDPOINT=\$(snow spcs service list-endpoints $TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME --format=json | jq --raw-output '.[].ingress_url')
@@ -92,5 +100,3 @@ until [[ \$SERVICE_ENDPOINT =~ \".snowflakecomputing.app\" ]]; do
 done
 echo \"Done waiting. Service endpoint: \$SERVICE_ENDPOINT\"
 "
-
-
