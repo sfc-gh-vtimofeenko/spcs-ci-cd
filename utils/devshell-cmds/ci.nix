@@ -1,3 +1,8 @@
+/**
+  Commands allow running individual steps from the CI pipeline. Some commands
+  also have an inverse of them (create service -> drop service) for faster and
+  more pointed resets.
+*/
 { pkgs, ... }:
 let
   settings.category = "ci";
