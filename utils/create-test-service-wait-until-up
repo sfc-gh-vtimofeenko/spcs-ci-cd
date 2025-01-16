@@ -100,6 +100,10 @@ timeout --foreground `# allows propagating sigtem to the started command` \
 until [[ \$SERVICE_ENDPOINT =~ \".snowflakecomputing.app\" ]]; do
   echo \"Polling service endpoint\"
   export SERVICE_ENDPOINT=\$(snow spcs service list-endpoints $TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME --format=json | jq --raw-output '.[].ingress_url')
+  if [[ \$SERVICE_ENDPOINT =~ \".snowflakecomputing.app\" ]]; then
+    echo \"Masking the URL\"
+    echo \"::add-mask::\$SERVICE_ENDPOINT\"
+  fi
   echo \"Service $TEST_SERVICE_NAME is: \$SERVICE_ENDPOINT\"
   sleep 1
 done
