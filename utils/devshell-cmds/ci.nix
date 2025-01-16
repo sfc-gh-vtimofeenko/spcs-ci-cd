@@ -62,6 +62,15 @@ in
       |> pkgs.writeShellApplication
       |> lib.getExe;
   }
+  # Inverse of the previous command
+  {
+    help = "Stop the test compute pool";
+    name = "stop-test-compute-pool";
+    command = ''
+      set -x
+      snow spcs compute-pool suspend $TEST_COMPUTE_POOL'';
+  }
+
   # Creates SPCS service to perform tests against
   # Blocks until service is up or times out
   {
