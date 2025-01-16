@@ -24,6 +24,8 @@ GET_POOL_STATE_CMD=( snow spcs compute-pool describe "${TEST_COMPUTE_POOL}" --fo
 
 POOL_INITIAL_STATE="$("${GET_POOL_STATE_CMD[@]}" | jq --raw-output '.[].state')"
 
+echo "Initial pool state: $POOL_INITIAL_STATE"
+
 if [ "$POOL_INITIAL_STATE" = "SUSPENDED" ]; then
   echo "Starting the compute pool"
   snow spcs compute-pool resume "${TEST_COMPUTE_POOL}"
