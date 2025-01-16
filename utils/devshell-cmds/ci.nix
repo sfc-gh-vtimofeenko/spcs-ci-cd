@@ -91,6 +91,11 @@ in
   }
 
   {
+    help = "Get test service state";
+    name = "get-service-state";
+    command = "snow spcs service describe $TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME";
+  }
+
   rec {
     help = "Run the test suite against the spcs test service";
     name = "run-tests-against-spcs";
