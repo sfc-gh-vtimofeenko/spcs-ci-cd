@@ -54,7 +54,7 @@ jobs:
       # Download artifact from the build step
       - uses: actions/download-artifact@v4
 
-      - name: Setup authentication
+      - name: Setup snowflake-cli authentication and config
         run: |
           cat <<EOF > ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
           ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
