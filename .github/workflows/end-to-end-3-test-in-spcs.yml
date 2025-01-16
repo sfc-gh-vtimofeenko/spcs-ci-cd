@@ -84,7 +84,7 @@ jobs:
               docker-archive:artifact/out \
               docker://"$TAG"
 
-      - name: Start test container pool
+      - name: Start test compute pool
         run: |
           nix develop .#default --command "ci-snowcli-start-pool-wait-until-started"
 
