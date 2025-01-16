@@ -24,6 +24,9 @@
 #       - CREATE SERVICE on $TEST_SERVICE_SCHEMA
 #       - USAGE on $TEST_SERVICE_SCHEMA
 #
+#   - TEST_SERVICE_WH :: warehouse that will execute the queries ran by the
+#     service
+#
 #   - REPOSITORY_URL :: URL to the image repository.
 #
 #     The URL can be retrieved by running DESCRIBE IMAGE REPOSITORY. It's
@@ -65,7 +68,9 @@ EOF
 
 snow spcs service create \
     "$TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME" \
-    --compute-pool "$TEST_COMPUTE_POOL" --spec-path "$SPEC_FILE"
+    --compute-pool "$TEST_COMPUTE_POOL" \
+    --spec-path "$SPEC_FILE" \
+    --query-warehouse "$TEST_SERVICE_WH"
 
 TERMINAL_STATES=("RUNNING" "FAILED")
 
