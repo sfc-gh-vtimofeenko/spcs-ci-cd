@@ -60,6 +60,13 @@ jobs:
           ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
           EOF
 
+          # This is done so that snowflake-cli is able to find the config.toml embedded in the repo
+          export SNOWFLAKE_HOME=$(pwd)
+          # Set the SNOWFLAKE_HOME variable for use by later steps
+          echo "SNOWFLAKE_HOME=$(pwd)" >> $GITHUB_ENV
+          # snowflake-cli checks the permissions on the confg file and complains if it's not 0600. Git does store permissions to this degree.
+          chmod 0600 $SNOWFLAKE_HOME/config.toml
+
       - name: Push image to Snowflake
         run: |
           SKOPEO_CMD="nix run .#skopeo --"
