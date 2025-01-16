@@ -105,7 +105,7 @@ until [[ \$SERVICE_ENDPOINT =~ \".snowflakecomputing.app\" ]]; do
     echo \"Masking the URL\"
     echo \"::add-mask::\$SERVICE_ENDPOINT\"
   fi
-  echo \"Service $TEST_SERVICE_NAME is: \$SERVICE_ENDPOINT\"
+  echo \"Service $TEST_SERVICE_NAME endpoint is: \$SERVICE_ENDPOINT\"
   sleep 1
 done
 echo \"Done waiting. Service endpoint: \$SERVICE_ENDPOINT\"
