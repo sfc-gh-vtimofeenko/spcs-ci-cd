@@ -19,12 +19,20 @@ jobs:
       TEST_SERVICE_SCHEMA: CI
 
     steps:
-      - name: Mask repo-related values in Github logs
-        # REGISTRY_URL can be retrieved by DESC IMAGE REPOSITORY <PATH>
+      - name: Mask parts of the variables in GH logs
         run: |
           IFS='/' read -ra URL_PARTS <<< "${{ secrets.REGISTRY_URL }}"
           for i in "${URL_PARTS[@]}"; do
              echo "::add-mask::$i"
+          done
+
+          IFS='-' read -ra ACCOUNT_PARTS <<< "${{ secrets.SNOWFLAKE_ACCOUNT }}"
+          for i in "${ACCOUNT_PARTS[@]}"; do
+             echo "::add-mask::$i"
+             # Mask uppercase version
+             echo "::add-mask::${i^^}"
+             # Mask lowercase version
+             echo "::add-mask::${i,,}"
           done
 
       - uses: actions/checkout@v4
