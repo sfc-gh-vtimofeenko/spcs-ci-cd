@@ -13,8 +13,9 @@ jobs:
       SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
       SNOWFLAKE_PRIVATE_KEY_PATH: /home/runner/work/key.p8
+      REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
       # Image tag
-      IMAGE_TAG: spcs-ci-cd
+      IMAGE_TAG: "spcs-ci-cd:latest"
 
       # Test service settings
       TEST_SERVICE_NAME: CI_CD_TEST_SERVICE
