@@ -66,6 +66,7 @@ spec:
 
 EOF
 
+echo "Creating the service"
 snow spcs service create \
     "$TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME" \
     --compute-pool "$TEST_COMPUTE_POOL" \
