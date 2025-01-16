@@ -89,17 +89,24 @@ in
       |> pkgs.writeShellApplication
       |> lib.getExe;
   }
-  # Retrieves the temporary service endpoint to be used for tests
+
   {
+  rec {
     help = "Run the test suite against the spcs test service";
     name = "run-tests-against-spcs";
     command =
-      # bash
-      ''
-        export ENDPOINT_URL=$(${snow} spcs service list-endpoints SPCS.CI.CI_CD_TEST_SRV --format=json | ${jq} --raw-output '.[].ingress_url')
-
-        test-spcs-hurl
-      '';
+      {
+        inherit name;
+        runtimeInputs = [
+          pkgs.snowflake-cli # `needed for snow`
+          pkgs.jq
+          pkgs.hurl
+          pkgs.git
+        ];
+        text = builtins.readFile (./../. + "/${name}");
+      }
+      |> pkgs.writeShellApplication
+      |> lib.getExe;
   }
 ]
 # Add category

@@ -90,13 +90,7 @@ jobs:
         run: utils/create-test-service-wait-until-up
 
       - name: Run tests
-        run: |
-
-          # jwt parsing needs file with 'pem' extension
-          export SECRET_PATH="/home/runner/work/key.pem"
-          cp ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }} $SECRET_PATH
-
-          nix develop .#default --command "run-tests-against-spcs"
+        run: utils/run-tests-against-spcs
 
       - name: Tear down test service
         # TODO: always run this but with a comment

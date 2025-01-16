@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+#
+# Runs a test suite against the service in SPCS
+#
+# Needs:
+# - Binaries:
+#   - snowflake-cli (snow)
+#   - jq :: to parse and operate on json output
+#   - hurl :: a sample test suite runner
+#   - git :: used to get the root of the project
+#
+# - Variables:
+#   - TEST_SERVICE_DB, TEST_SERVICE_SCHEMA, TEST_SERVICE_NAME :: parts of the
+#   test service location.
+#
+#       Requirements:
+#       - USAGE on $TEST_SERVICE_DB
+#       - CREATE SERVICE on $TEST_SERVICE_SCHEMA
+#       - USAGE on $TEST_SERVICE_SCHEMA
+set -euo pipefail
+
+# Get the service's endpoint URL. Service needs to be running and accessible at
+# this time.
+
+ENDPOINT_URL=$(snow spcs service list-endpoints \
+    "$TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME" \
+    --format=json | jq --raw-output '.[].ingress_url')
+export ENDPOINT_URL
+
+# Get the root of the project
+PRJ_ROOT=$(git rev-parse --show-toplevel)
+export PRJ_ROOT
+
+# First, procure auth token
+# In this case, bash script is used
+
+# Set up hurl
+HURL_auth_token=$("$PRJ_ROOT"/utils/spcs-jwt-to-auth-token)
+export HURL_auth_token
+# Pass the endpoint URL to hurl
+export HURL_url=${ENDPOINT_URL}
+# This value will be used in the test
+export HURL_expected_user=${SNOWFLAKE_USER}
+
+# Run the test suite
+hurl --test "$PRJ_ROOT/hurl-tests/integration-tests"
