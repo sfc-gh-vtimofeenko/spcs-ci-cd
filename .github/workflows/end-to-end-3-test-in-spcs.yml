@@ -8,10 +8,12 @@ jobs:
   deploy-to-spcs:
     runs-on: ubuntu-latest
     env:
+      # Required authentication for snowflake-cli
       SNOWFLAKE_AUTHENTICATOR: SNOWFLAKE_JWT
       SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
       SNOWFLAKE_PRIVATE_KEY_PATH: /home/runner/work/key.p8
+      # Image tag
       IMAGE_TAG: spcs-ci-cd
 
       # Test service settings
