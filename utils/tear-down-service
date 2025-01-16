@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+#
+# Runs a test suite against the service in SPCS
+#
+# Needs:
+# - Binaries:
+#   - snowflake-cli (snow)
+#
+# - Variables:
+#   - TEST_SERVICE_DB, TEST_SERVICE_SCHEMA, TEST_SERVICE_NAME :: parts of the
+#   test service location.
+#
+set -euo pipefail
+
+# "IF EXISTS" will prevent extra errors if the service was never created
+snow sql --query "DROP SERVICE IF EXISTS $TEST_SERVICE_DB.$TEST_SERVICE_SCHEMA.$TEST_SERVICE_NAME"

@@ -108,6 +108,21 @@ in
       |> pkgs.writeShellApplication
       |> lib.getExe;
   }
+
+  rec {
+    help = "Tear down service";
+    name = "tear-down-service";
+    command =
+      {
+        inherit name;
+        runtimeInputs = [
+          pkgs.snowflake-cli # `needed for snow`
+        ];
+        text = builtins.readFile (./../. + "/${name}");
+      }
+      |> pkgs.writeShellApplication
+      |> lib.getExe;
+  }
 ]
 # Add category
 |> map (cmd: cmd // { inherit (settings) category; })

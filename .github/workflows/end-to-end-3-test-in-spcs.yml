@@ -93,6 +93,10 @@ jobs:
         run: utils/run-tests-against-spcs
 
       - name: Tear down test service
-        # TODO: always run this but with a comment
-        run: |
-          exit 1
+        # Run this if one is true:
+        # 1. All steps above succeeded
+        # 2. Job was cancelled
+        #
+        # Potential tweak: clean up if create step failed
+        if: ${{ success() || cancelled() }}
+        run: utils/tear-down-service
