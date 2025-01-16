@@ -13,10 +13,14 @@ jobs:
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
       SNOWFLAKE_PRIVATE_KEY_PATH: /home/runner/work/key.p8
       IMAGE_TAG: spcs-ci-cd
+
+      # Test service settings
       TEST_SERVICE_NAME: CI_CD_TEST_SERVICE
       TEST_COMPUTE_POOL: CI_CD_TEST
       TEST_SERVICE_DB: SPCS
       TEST_SERVICE_SCHEMA: CI
+      TEST_SERVICE_WH: ADHOC
+      ROLE_WITH_ACCESS_TO_ENDPOINT: SPCS_CI_CD_RL
 
     steps:
       - name: Mask parts of the variables in GH logs
