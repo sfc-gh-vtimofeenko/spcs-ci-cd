@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+#
+# Creates a SPCS service to run tests against. Waits until the service is
+# accessible via URL
+#
+# Needs:
+# - Binaries:
+#   - snowflake-cli (snow)
+#   - jq :: to parse and operate on json output
+#   - timeout :: usually accessible from coreutils if not already present
+#
+# - Variables:
+#
+#   - PROD_SERVICE_DB, PROD_SERVICE_SCHEMA, PROD_SERVICE_NAME :: parts of the
+#   test service location.
+#
+#       Requirements:
+#       - USAGE on $PROD_SERVICE_DB
+#       - CREATE SERVICE on $PROD_SERVICE_SCHEMA
+#       - USAGE on $PROD_SERVICE_SCHEMA
+#
+#   - PROD_SERVICE_WH :: warehouse that will execute the queries ran by the
+#     service
+#
+#   - REPOSITORY_URL :: URL to the image repository.
+#
+#     The URL can be retrieved by running DESCRIBE IMAGE REPOSITORY. It's
+#     usually in format <org-name>-<account-name>.registry.
+#     snowflakecomputing.com/<db>/<schema>/<repo-name>
+#
+#   - IMAGE_TAG :: last component of the image tag.
+#
+#     In this repo it's 'spcs-ci-cd:latest'
+#
+#   - DEMO_DOCKER_PORT :: which port the service listens on inside the
+#     container.
+#
+#     8001 in the reference.
+#
+# - Other:
+#   - BIND SERVICE ENDPOINT privilege on ACCOUNT
+set -euo pipefail
+
+# Set up a simple service schema
+# Other settings:
+# https://docs.snowflake.com/en/developer-guide/snowpark-container-services/specification-reference
+SPEC_FILE=$(mktemp)
+
+# shellcheck disable=SC2064
+trap "rm -f $SPEC_FILE" EXIT
+
+cat<<EOF >"$SPEC_FILE"
+spec:
+  containers:
+    - name: test-service
+      image: $REPOSITORY_URL/$IMAGE_TAG
+  endpoints:
+    - name: main
+      port: $DEMO_DOCKER_PORT
+      public: true
+
+EOF
+
+# Get current service state
+echo "Retrieving the service state"
+# Some notes:
+# - Services are unique by name, so SHOW SERVICES LIKE without '%' will show 0 or 1
+# - "pipefail" will ensure that an error coming from `snow` will stop this script
+SERVICE_INFO="$(snow sql --query "SHOW SERVICES LIKE '$PROD_SERVICE_NAME' IN SCHEMA $PROD_SERVICE_DB.$PROD_SERVICE_SCHEMA" --format=json)"
+SERVICE_COUNT=$(echo "$SERVICE_INFO" | jq length)
+SERVICE_STATE=$(echo "$SERVICE_INFO" | jq '.[].status')
+
+if [[ $SERVICE_COUNT -eq 1 ]] && [[ $SERVICE_STATE != "RUNNING" ]]; then
+    echo "Looks like the service exists and is in state '$SERVICE_STATE'. Script will not continue."
+    exit 1
+fi
+
+# TODO: check that the service is RUNNING before proceeding
+
+if [[ $SERVICE_COUNT -eq 0 ]]; then
+    echo "Creating a service"
+    snow spcs service create \
+        "$PROD_SERVICE_DB.$PROD_SERVICE_SCHEMA.$PROD_SERVICE_NAME" \
+        --compute-pool "$PROD_COMPUTE_POOL" \
+        --spec-path "$SPEC_FILE" \
+        --query-warehouse "$PROD_SERVICE_WH"
+elif [[ $SERVICE_COUNT -eq 1 ]]; then
+    echo "Will upgrade a service"
+    snow spcs service upgrade \
+        "$PROD_SERVICE_DB.$PROD_SERVICE_SCHEMA.$PROD_SERVICE_NAME" \
+        --spec-path "$SPEC_FILE"
+else
+    echo "Unexpected service count: $SERVICE_COUNT. Please check the service status and submit a bug for this script."
+    exit 1
+fi
+
+# If the service does not exist -- create it
+
+TERMINAL_STATES=("RUNNING" "FAILED")
+
+# Otherwise -- tell the system to update the service
+
+SERVICE_START_TIMEOUT="10m"
+timeout --foreground `# allows propagating sigtem to the started command` \
+    "$SERVICE_START_TIMEOUT" bash -c "
+until [[ \"${TERMINAL_STATES[*]}\" =~ \$SERVICE_STATE ]]; do
+  echo \"Polling service state\"
+  export SERVICE_STATE=\$(snow spcs service describe $PROD_SERVICE_DB.$PROD_SERVICE_SCHEMA.$PROD_SERVICE_NAME --format=json | jq --raw-output '.[].status')
+  echo \"Service $PROD_SERVICE_NAME is \$SERVICE_STATE\"
+  sleep 1
+done
+"
+
+FINAL_SERVICE_STATE=$(snow spcs service describe "$PROD_SERVICE_DB.$PROD_SERVICE_SCHEMA.$PROD_SERVICE_NAME" --format=json | jq --raw-output '.[].status')
+echo "Done waiting. Service is now $FINAL_SERVICE_STATE"
+
+if [[ $FINAL_SERVICE_STATE = "FAILED" ]]; then
+    echo "Service failed during initial startup. Please check the logs."
+    exit 1
+fi
+
+# Block until ingress_url is filled (starts with ingress_url)
+SERVICE_ENDPOINT_TIMEOUT="10m"
+timeout --foreground `# allows propagating sigtem to the started command` \
+     "$SERVICE_ENDPOINT_TIMEOUT" bash -c "
+until [[ \$SERVICE_ENDPOINT =~ \".snowflakecomputing.app\" ]]; do
+  echo \"Polling service endpoint\"
+  export SERVICE_ENDPOINT=\$(snow spcs service list-endpoints $PROD_SERVICE_DB.$PROD_SERVICE_SCHEMA.$PROD_SERVICE_NAME --format=json | jq --raw-output '.[].ingress_url')
+  if [[ \$SERVICE_ENDPOINT =~ \".snowflakecomputing.app\" ]]; then
+    echo \"Masking the URL\"
+    echo \"::add-mask::\$SERVICE_ENDPOINT\"
+  fi
+  echo \"Service $PROD_SERVICE_NAME endpoint is: \$SERVICE_ENDPOINT\"
+  sleep 1
+done
+echo \"Done waiting. Service endpoint: \$SERVICE_ENDPOINT\"
+"
