@@ -3,7 +3,12 @@
 
   inputs = {
     flake-parts.url = "github:hercules-ci/flake-parts";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+
+    # Nixpkgs is pinned to the revision where snowflake-cli==3.5.0 was merged
+    # snowflake-cli >= 3.5.0 is needed for spcs commands:
+    # https://github.com/snowflakedb/snowflake-cli/releases/tag/v3.5.0
+    nixpkgs.url = "github:NixOS/nixpkgs?rev=4e0e69f6b14d6b15e02996ee02ccc8728dcc683a";
+
     devshell.url = "github:numtide/devshell";
     devshell.inputs.nixpkgs.follows = "nixpkgs";
   };
