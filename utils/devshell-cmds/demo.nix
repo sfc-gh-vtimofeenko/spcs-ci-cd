@@ -1,3 +1,5 @@
+# This file contains devshell commands that run the service on the local
+# machine and demo its functionality
 { pkgs, ... }:
 let
   curl = pkgs.lib.getExe pkgs.curl;
@@ -6,7 +8,7 @@ in
   {
     help = "Build using local docker";
     name = "docker-run-local";
-    command = ''docker run --rm -p ''${DEMO_DOCKER_PORT}:8001 $(docker build -q ''${PRJ_ROOT})''; # NOTE: not providing docker in the devshell
+    command = ''docker run --rm -p ''${DEMO_DOCKER_PORT}:8001 $(docker build -q ''${PRJ_ROOT:-$(git rev-parse --show-toplevel)})''; # NOTE: not providing docker in the devshell
   }
   {
     help = "Build using nix, run in local docker";
