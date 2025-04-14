@@ -37,7 +37,7 @@
             dockerImage =
               let
                 # writeTextDir produces dir which is what nginx needs for the `-p` flag
-                nginxConf = pkgs.writeTextDir "conf/nginx.conf" (builtins.readFile ./nginx.conf);
+                nginxConf = pkgs.writeTextDir "conf/nginx.conf" (builtins.readFile ./src/nginx.conf);
               in
               pkgs.dockerTools.buildLayeredImage {
                 name = "spcs-ci-cd";
