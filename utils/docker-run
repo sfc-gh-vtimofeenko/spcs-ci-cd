@@ -19,5 +19,5 @@ docker load < "$ARTIFACT_PATH"
 docker run --rm \
   --detach \
   -p "$DEMO_DOCKER_PORT":8001 \
-  --platform=linux/amd64 IMAGE_TAG
+  --platform=linux/amd64 "$IMAGE_TAG"
 
