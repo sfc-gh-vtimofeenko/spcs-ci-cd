@@ -1,5 +1,5 @@
 ---
-name: End to end pipeline that builds the image, tests it locally, remotely and deploys it
+name: "[Pipeline] End to end"
 
 on:
   workflow_dispatch: # Only run manually
