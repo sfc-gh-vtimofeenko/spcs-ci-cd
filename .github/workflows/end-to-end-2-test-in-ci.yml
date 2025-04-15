@@ -5,6 +5,10 @@ on:
   workflow_call:
   workflow_dispatch:
 
+env:
+  ARTIFACT_PATH: ./out
+  IMAGE_TAG: "spcs-ci-cd:latest"
+  DEMO_DOCKER_PORT: 8081
 
 jobs:
   run-local-hurl-tests:
