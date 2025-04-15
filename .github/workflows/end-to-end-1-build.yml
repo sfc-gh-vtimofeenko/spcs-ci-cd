@@ -27,9 +27,10 @@ jobs:
       # # Set up cache to cache build-related things
       # - uses: DeterminateSystems/magic-nix-cache-action@main
 
+      # NOTE: SPCS (at the time of writing) supports only x86_64 architecture
       - name: Build image (produce docker archive file)
         run: |
-          nix build -o out .#default
+          nix build -o out .#packages.x86_64-linux.default
 
 
       # Upload artifact to github cache
