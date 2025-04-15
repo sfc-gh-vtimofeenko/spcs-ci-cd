@@ -161,9 +161,23 @@ Duration:          6 ms
 
 ```
 
-# Remote setup: Snowflake & CI/CD runtime
+# CI/CD pipeline
 
-TODO
+The reference CI/CD pipeline is implemented using GitHub actions. It does use
+some GitHub-specific concepts, but they should be portable to other CI systems.
+The workflows are there to provide control for the scripts from the repository.
+
+The runners use the standard `ubuntu-latest` image. Whatever dependencies a step
+needs, the step will install.
+
+## Building the image
+
+The build step does not require any authentication into Snowflake. The [workflow
+file](.github/workflows/end-to-end-1-build.yml) creates a docker image as an
+archive and stores it as a GitHub artifact.
+
+An alternative implementation could use a container repository that is built
+into the CI/CD system, but the code would become less portable.
 
 [common-setup]: https://docs.snowflake.com/en/developer-guide/snowpark-container-services/tutorials/common-setup
 [snowcli-install]: https://docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation
