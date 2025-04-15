@@ -14,24 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Using nix to take better advantage of caching than apt-get update & friends
-      - uses: DeterminateSystems/nix-installer-action@main
-        with:
-          extra-conf: |-
-              experimental-features = pipe-operators nix-command flakes
-
-      # NOTE: magic-nix-cache stopped working on Feb 1, 2025
-      # Issue:
-      # https://github.com/DeterminateSystems/magic-nix-cache/issues/123
-      #
-      # # Set up cache to cache build-related things
-      # - uses: DeterminateSystems/magic-nix-cache-action@main
-
-      # NOTE: SPCS (at the time of writing) supports only x86_64 architecture
-      - name: Build image (produce docker archive file)
+      - name: Build docker image
         run: |
-          nix build -o out .#packages.x86_64-linux.default
-
+          docker build --platform linux/amd64 -t spcs-ci-cd:latest .
+          docker save spcs-ci-cd:latest -o ./out
 
       # Upload artifact to github cache
       - uses: actions/upload-artifact@v4
