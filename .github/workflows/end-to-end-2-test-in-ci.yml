@@ -3,6 +3,7 @@ name: Run tests against docker container running locally
 
 on:
   workflow_call:
+  workflow_dispatch:
 
 
 jobs:
