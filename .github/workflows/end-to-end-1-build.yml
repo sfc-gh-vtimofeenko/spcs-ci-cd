@@ -1,12 +1,12 @@
 ---
-name: Build docker archive using nix
+name: "[Pipeline] Build docker archive"
 
 on:
   workflow_call:
 
 
 jobs:
-  build-nix:
+  build-image:
     runs-on: ubuntu-latest
     env:
       IMAGE_TAG: spcs-ci-cd
