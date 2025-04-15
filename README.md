@@ -179,6 +179,12 @@ archive and stores it as a GitHub artifact.
 An alternative implementation could use a container repository that is built
 into the CI/CD system, but the code would become less portable.
 
+## Testing the service in the pipeline
+
+[The test step](.github/workflows/end-to-end-2-test-in-ci.yml) consists of
+running the container built on previous step and running the "local" tests
+against it.
+
 [common-setup]: https://docs.snowflake.com/en/developer-guide/snowpark-container-services/tutorials/common-setup
 [snowcli-install]: https://docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation
 [snowcli-connection]: https://docs.snowflake.com/en/developer-guide/snowflake-cli/connecting/connect
