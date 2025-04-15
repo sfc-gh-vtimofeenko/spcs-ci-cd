@@ -20,8 +20,12 @@ jobs:
           extra-conf: |-
               experimental-features = pipe-operators nix-command flakes
 
-      # Set up cache to cache build-related things
-      - uses: DeterminateSystems/magic-nix-cache-action@main
+      # NOTE: magic-nix-cache stopped working on Feb 1, 2025
+      # Issue:
+      # https://github.com/DeterminateSystems/magic-nix-cache/issues/123
+      #
+      # # Set up cache to cache build-related things
+      # - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Build image (produce docker archive file)
         run: |
