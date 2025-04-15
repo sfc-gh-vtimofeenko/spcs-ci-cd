@@ -3,7 +3,7 @@ name: "[Pipeline] Build docker archive"
 
 on:
   workflow_call:
-
+  workflow_dispatch: # Allows running this workflow manually
 
 jobs:
   build-image:
