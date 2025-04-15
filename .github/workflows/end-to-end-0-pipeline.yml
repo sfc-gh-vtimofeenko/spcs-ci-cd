@@ -24,5 +24,4 @@ jobs:
   # FIXME: Implement
   deploy-to-spcs-prod:
     needs: test-spcs
-    runs-on: ubuntu-latest
     uses: ./.github/workflows/end-to-end-4-deploy-to-prod.yml
