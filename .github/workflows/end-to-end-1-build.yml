@@ -16,8 +16,8 @@ jobs:
 
       - name: Build docker image
         run: |
-          docker build --platform linux/amd64 -t spcs-ci-cd:latest .
-          docker save spcs-ci-cd:latest -o ./out
+          docker build --platform linux/amd64 -t $IMAGE_TAG:latest .
+          docker save $IMAGE_TAG:latest -o ./out
 
       # Upload artifact to github cache
       - uses: actions/upload-artifact@v4
