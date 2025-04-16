@@ -95,6 +95,7 @@ in
       pkgs.jq
       pkgs.hurl
       pkgs.git
+      pkgs.jwt-cli # Needed for getting the auth token
     ];
   }
 
