@@ -3,6 +3,7 @@ name: "[Pipeline] Deploy and test service in SPCS"
 
 on:
   workflow_call:
+  workflow_dispatch:
 
 jobs:
   deploy-to-spcs:
