@@ -9,12 +9,13 @@ jobs:
   deploy-to-spcs:
     runs-on: ubuntu-latest
     env:
+      ARTIFACT_PATH: artifact/out
       # Required authentication for snowflake-cli
       SNOWFLAKE_AUTHENTICATOR: SNOWFLAKE_JWT
       SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
       SNOWFLAKE_PRIVATE_KEY_PATH: /home/runner/work/key.p8
-      REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
+      REPOSITORY_URL: ${{ secrets.REPOSITORY_URL }}
       # Image tag
       IMAGE_TAG: "spcs-ci-cd:latest"
 
@@ -29,7 +30,7 @@ jobs:
     steps:
       - name: Mask parts of the variables in GH logs
         run: |
-          IFS='/' read -ra URL_PARTS <<< "${{ secrets.REGISTRY_URL }}"
+          IFS='/' read -ra URL_PARTS <<< "${{ secrets.REPOSITORY_URL }}"
           for i in "${URL_PARTS[@]}"; do
              echo "::add-mask::$i"
           done
