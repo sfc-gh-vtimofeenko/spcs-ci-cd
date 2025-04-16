@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ARTIFACT_PATH: artifact/out
+      DEMO_DOCKER_PORT: 8001
       # Required authentication for snowflake-cli
       SNOWFLAKE_AUTHENTICATOR: SNOWFLAKE_JWT
       SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
