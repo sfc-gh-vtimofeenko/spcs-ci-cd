@@ -8,7 +8,7 @@ on:
 env:
   ARTIFACT_PATH: artifact/out
   IMAGE_TAG: "spcs-ci-cd:latest"
-  DEMO_DOCKER_PORT: 8081
+  DEMO_DOCKER_PORT: 8001
 
 jobs:
   run-local-hurl-tests:
