@@ -209,6 +209,13 @@ service and runs tests against it.
    [`spcs-shell-jwt`][spcs-shell-jwt] to generate the authentication token.
    
 7. Tear down the test instance
+
+## Deploying the service to production
+
+Assuming all tests pass, [the last
+step](.github/workflows/end-to-end-4-deploy-to-prod.yml) upgrades the running
+instance to the latest version of the image.
+
 [common-setup]: https://docs.snowflake.com/en/developer-guide/snowpark-container-services/tutorials/common-setup
 [snowcli-install]: https://docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation
 [snowcli-connection]: https://docs.snowflake.com/en/developer-guide/snowflake-cli/connecting/connect
