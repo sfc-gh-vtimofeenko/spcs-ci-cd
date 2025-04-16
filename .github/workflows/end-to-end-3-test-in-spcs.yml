@@ -1,5 +1,5 @@
 ---
-name: Deploy and test service in SPCS
+name: "[Pipeline] Deploy and test service in SPCS"
 
 on:
   workflow_call:
