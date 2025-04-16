@@ -6,18 +6,18 @@ on:
 
 jobs:
   # Builds the container image
-  build:
-    uses: ./.github/workflows/end-to-end-1-build.yml
+  # build:
+  #   uses: ./.github/workflows/end-to-end-1-build.yml
 
   # Runs the container image in docker and runs the unit tests
   test-in-ci:
     uses: ./.github/workflows/end-to-end-2-test-in-ci.yml
-    needs: build
+    # needs: build
 
   # Deploys a test service in SPCS, runs integration tests
   test-in-spcs:
     uses: ./.github/workflows/end-to-end-3-test-in-spcs.yml
-    needs: build
+    # needs: build
     secrets: inherit
 
   # Deploys the service into production
