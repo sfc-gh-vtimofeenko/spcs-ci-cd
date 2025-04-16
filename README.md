@@ -185,7 +185,32 @@ into the CI/CD system, but the code would become less portable.
 running the container built on previous step and running the "local" tests
 against it.
 
+## Testing the service in SPCS
+
+In parallel with the previous step, the pipeline deploys a test instance of the
+service and runs tests against it.
+
+[This workflow](.github/workflows/end-to-end-3-test-in-spcs.yml) implements the necessary steps:
+
+1. Grab the image built in the same pipeline
+2. Set up authentication for Snowflake CLI and installs it
+3. Push the image into Snowflake registry
+4. Start a compute pool for the test service blocking until it's running
+5. Start a separate instance of the service to run the tests against
+6. Perform tests against the test instance
+
+   The instance is running in Snowflake and the service can connect to
+   Snowflake using the authentication materials injected into the running
+   container. The pipeline now can run the integration tests that check behavior
+   of the webservice when it's communicating with the persistence layer.
+
+   These tests are also written using `hurl` and are in a [separate
+   directory](./hurl-tests/integration-tests). Tests use code based on
+   [`spcs-shell-jwt`][spcs-shell-jwt] to generate the authentication token.
+   
+7. Tear down the test instance
 [common-setup]: https://docs.snowflake.com/en/developer-guide/snowpark-container-services/tutorials/common-setup
 [snowcli-install]: https://docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation
 [snowcli-connection]: https://docs.snowflake.com/en/developer-guide/snowflake-cli/connecting/connect
 [local-tests]: ./hurl-tests/unit-tests
+[spcs-shell-jwt]: https://github.com/sfc-gh-vtimofeenko/spcs-shell-jwt
