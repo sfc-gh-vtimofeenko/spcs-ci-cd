@@ -102,8 +102,10 @@ jobs:
       - name: Create test service
         run: utils/create-test-service-wait-until-up
 
+      # Using nix to make sure all deps are installed
       - name: Run tests
-        run: utils/run-tests-against-spcs
+        run: |
+          nix run .#run-tests-against-spcs
 
       - name: Tear down test service
         # Run this if one is true:
