@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  ARTIFACT_PATH: ./out
+  ARTIFACT_PATH: artifact/out
   IMAGE_TAG: "spcs-ci-cd:latest"
   DEMO_DOCKER_PORT: 8081
 
