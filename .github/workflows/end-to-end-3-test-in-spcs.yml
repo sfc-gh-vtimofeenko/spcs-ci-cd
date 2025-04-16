@@ -105,7 +105,7 @@ jobs:
       # Using nix to make sure all deps are installed
       - name: Run tests
         run: |
-          nix run .#run-tests-against-spcs
+          nix develop .#default --command run-tests-against-spcs
 
       - name: Tear down test service
         # Run this if one is true:
