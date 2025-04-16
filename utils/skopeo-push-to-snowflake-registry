@@ -33,7 +33,7 @@ SKOPEO_TAG="$REPOSITORY_URL/$IMAGE_TAG"
 # Copy image from local to remote
 skopeo copy \
     --additional-tag "$SKOPEO_TAG" \
-    --insecure-policy `#otherwise fails loading policy.json`
+    --insecure-policy `#otherwise fails loading policy.json` \
     docker-archive:"$ARTIFACT_PATH" `#see man skopeo for alternative sources` \
     docker://"$SKOPEO_TAG"
 
