@@ -11,12 +11,12 @@ jobs:
     env:
       ARTIFACT_PATH: artifact/out
       DEMO_DOCKER_PORT: 8001
-      SECRET_PATH: /home/runner/work/key.p8
+      SECRET_PATH: /home/runner/work/key.pem
       # Required authentication for snowflake-cli
       SNOWFLAKE_AUTHENTICATOR: SNOWFLAKE_JWT
       SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-      SNOWFLAKE_PRIVATE_KEY_PATH: /home/runner/work/key.p8
+      SNOWFLAKE_PRIVATE_KEY_PATH: /home/runner/work/key.pem
       REPOSITORY_URL: ${{ secrets.REPOSITORY_URL }}
       # Image tag
       IMAGE_TAG: "spcs-ci-cd:latest"
