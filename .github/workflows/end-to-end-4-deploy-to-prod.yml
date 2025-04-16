@@ -1,26 +1,77 @@
 ---
-name: Deploy the service into production in SPCS
+name: "[Pipeline] Deploy the service into production in SPCS"
 
 on:
   workflow_call:
+  workflow_dispatch:
 
 jobs:
   deploy-to-prod:
     runs-on: ubuntu-latest
+    env:
+      ARTIFACT_PATH: artifact/out
+      DEMO_DOCKER_PORT: 8001
+      SECRET_PATH: /home/runner/work/key.pem
+      # Required authentication for snowflake-cli
+      SNOWFLAKE_AUTHENTICATOR: SNOWFLAKE_JWT
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_PRIVATE_KEY_PATH: /home/runner/work/key.pem
+      REPOSITORY_URL: ${{ secrets.REPOSITORY_URL }}
+      # Image tag
+      IMAGE_TAG: "spcs-ci-cd:latest"
+
+      # Test service settings
+      PROD_SERVICE_NAME: CI_CD_PROD_SERVICE
+      PROD_COMPUTE_POOL: CI_CD_PROD
+      PROD_SERVICE_DB: SPCS
+      PROD_SERVICE_SCHEMA: CI
+      PROD_SERVICE_WH: ADHOC
+
 
     steps:
-      # FIXME: implement
-      - name: Mask repo-related values in Github logs
+      - name: Mask parts of the variables in GH logs
         run: |
-          exit 0
+          IFS='/' read -ra URL_PARTS <<< "${{ secrets.REPOSITORY_URL }}"
+          for i in "${URL_PARTS[@]}"; do
+             echo "::add-mask::$i"
+          done
 
-      # FIXME: implement
-      - name: Setup snowcli
+          IFS='-' read -ra ACCOUNT_PARTS <<< "${{ secrets.SNOWFLAKE_ACCOUNT }}"
+          for i in "${ACCOUNT_PARTS[@]}"; do
+             echo "::add-mask::$i"
+             # Mask uppercase version
+             echo "::add-mask::${i^^}"
+             # Mask lowercase version
+             echo "::add-mask::${i,,}"
+          done
+
+      - uses: actions/checkout@v4
+
+      - uses: DeterminateSystems/nix-installer-action@main
+        with:
+          extra-conf: |-
+              experimental-features = pipe-operators nix-command flakes
+
+      - name: Setup snowflake-cli authentication and config
         run: |
-          exit 0
+          cat <<EOF > ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
+          ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+          EOF
+
+          # This is done so that snowflake-cli is able to find the config.toml embedded in the repo
+          export SNOWFLAKE_HOME=$(pwd)
+          # Set the SNOWFLAKE_HOME variable for use by later steps
+          echo "SNOWFLAKE_HOME=$(pwd)" >> $GITHUB_ENV
+          # snowflake-cli checks the permissions on the confg file and complains if it's not 0600. Git does store permissions to this degree.
+          chmod 0600 $SNOWFLAKE_HOME/config.toml
+
+      - name: Add snowflake-cli
+        run: |
+          nix profile install .#snowflake-cli
+
 
       # This step assumes the image is tagged as the same tag as in the previous "test" step
-      # FIXME: implement
       - name: Create the service
-        run: |
-          exit 0
+        run: utils/upgrade-prod-service
+

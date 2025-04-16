@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Upgrades the production instance of the SPCS service.
+# Needs:
+# - Binaries:
+#   - snowflake-cli (snow)
+# - Variables:
+#   - PROD_SERVICE_DB, PROD_SERVICE_SCHEMA, PROD_SERVICE_NAME :: parts of the
+#   test service location.
+#
+#       Requirements:
+#       - USAGE on $PROD_SERVICE_DB
+#       - CREATE SERVICE on $PROD_SERVICE_SCHEMA
+#       - USAGE on $PROD_SERVICE_SCHEMA
+#
+#   - PROD_SERVICE_WH :: warehouse that will execute the queries ran by the
+#     service
+#
+#   - REPOSITORY_URL :: URL to the image repository.
+#
+#     The URL can be retrieved by running DESCRIBE IMAGE REPOSITORY. It's
+#     usually in format <org-name>-<account-name>.registry.
+#     snowflakecomputing.com/<db>/<schema>/<repo-name>
+#
+#   - IMAGE_TAG :: last component of the image tag.
+#
+#     In this repo it's 'spcs-ci-cd:latest'
+
+# Set up a simple service schema
+# Other settings:
+# https://docs.snowflake.com/en/developer-guide/snowpark-container-services/specification-reference
+SPEC_FILE=$(mktemp)
+
+# shellcheck disable=SC2064
+trap "rm -f $SPEC_FILE" EXIT
+
+cat<<EOF >"$SPEC_FILE"
+spec:
+  containers:
+    - name: prod-service
+      image: $REPOSITORY_URL/$IMAGE_TAG
+  endpoints:
+    - name: main
+      port: $DEMO_DOCKER_PORT
+      public: true
+
+EOF
+
+snow spcs service upgrade \
+    "$PROD_SERVICE_DB.$PROD_SERVICE_SCHEMA.$PROD_SERVICE_NAME" \
+    --spec-path "$SPEC_FILE"
