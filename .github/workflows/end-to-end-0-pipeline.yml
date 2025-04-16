@@ -22,5 +22,5 @@ jobs:
 
   # Deploys the service into production
   deploy-to-spcs-prod:
-    needs: test-in-spcs
+    needs: [test-in-spcs, test-in-ci]
     uses: ./.github/workflows/end-to-end-4-deploy-to-prod.yml
