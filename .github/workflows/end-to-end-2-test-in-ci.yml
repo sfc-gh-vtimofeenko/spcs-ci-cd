@@ -34,8 +34,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: .
-          github-token: ${{ secrets.READ_ARTIFACTS_PAT }}
-          run-id: 14481573539
 
       # Start detached docker process
       - name: Run docker image in container
